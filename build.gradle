@@ -71,17 +71,37 @@ dependencies {
 }
 
 // Keep dev runs silent: the test client opens on a real audio device.
-def muteOptions = { File runDir ->
+def writeRunOptions = { File runDir, boolean lowSpec ->
     runDir.mkdirs()
     def options = new File(runDir, "options.txt")
     def volumes = ["master", "music", "ambient", "weather", "block", "hostile", "neutral", "player", "record", "voice"]
     def lines = volumes.collect { "soundCategory_${it}:0.0" }
+
+    if (lowSpec) {
+        // The test client has to load a world within a fixed tick budget, and CI
+        // runners draw with llvmpipe on two cores. Cut everything that costs frames.
+        lines += [
+            'graphicsPreset:"fast"',
+            "renderDistance:3",
+            "simulationDistance:5",
+            "biomeBlendRadius:0",
+            "mipmapLevels:0",
+            "ao:false",
+            "entityShadows:false",
+            "enableVsync:false",
+            "particles:2",
+            'renderClouds:"false"',
+            "maxFps:60"
+        ]
+    }
+
     options.text = lines.join("\n") + "\n"
 }
 
 tasks.matching { it.name in ["runClient", "runClientGameTest", "runServer"] }.configureEach {
     doFirst {
-        muteOptions(file(it.name == "runClientGameTest" ? "build/run/clientGameTest" : "run"))
+        boolean gameTest = it.name == "runClientGameTest"
+        writeRunOptions(file(gameTest ? "build/run/clientGameTest" : "run"), gameTest)
     }
 }
 
