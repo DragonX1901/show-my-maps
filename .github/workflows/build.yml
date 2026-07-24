@@ -48,14 +48,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y xvfb libgl1-mesa-dri mesa-utils
 
+      - name: Show runner capabilities
+        run: |
+          nproc
+          free -m
+          xvfb-run -a glxinfo -B || true
+
       - name: Run client gametests
         timeout-minutes: 30
         env:
           LIBGL_ALWAYS_SOFTWARE: 1
-          # llvmpipe rasterises on one thread per core by default, which starves
-          # the server's chunk generation and stalls world loading.
-          LP_NUM_THREADS: 1
-        run: xvfb-run -a -s "-screen 0 1280x800x24" ./gradlew runClientGameTest --stacktrace
+        run: |
+          xvfb-run -a -s "-screen 0 1280x800x24" ./gradlew runClientGameTest --stacktrace &
+          gradle_pid=$!
+
+          # World loading has stalled here before. If it happens again, print what
+          # the client threads are doing instead of only the timeout.
+          (
+            sleep 150
+            for pid in $(pgrep -f devlaunchinjector); do
+              echo "=== thread dump $pid ==="
+              jcmd "$pid" Thread.print || true
+            done
+          ) &
+
+          wait $gradle_pid
 
       - if: always()
         uses: actions/upload-artifact@v7
