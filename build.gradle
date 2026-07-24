@@ -79,7 +79,7 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
 
     if (lowSpec) {
         // The test client has to load a world within a fixed tick budget, and CI
-        // runners draw with llvmpipe on two cores. Cut everything that costs frames.
+        // runners draw with llvmpipe on few cores. Cut everything that costs frames.
         lines += [
             'graphicsPreset:"fast"',
             "renderDistance:3",
@@ -96,6 +96,12 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
     }
 
     options.text = lines.join("\n") + "\n"
+}
+
+// Minecraft sizes its chunk worker pool from the core count, and CI runners are
+// small enough that spawn chunks never finish inside the harness tick budget.
+tasks.named("runClientGameTest") {
+    jvmArgs "-Dmax.bg.threads=4"
 }
 
 tasks.matching { it.name in ["runClient", "runClientGameTest", "runServer"] }.configureEach {
