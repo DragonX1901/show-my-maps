@@ -1,0 +1,115 @@
+package org.dx.show_my_maps.client.gui;
+
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.util.Mth;
+import org.dx.show_my_maps.client.ShowMyMapsConfig;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.function.IntConsumer;
+import java.util.function.IntSupplier;
+
+/**
+ * Plain vanilla widgets, so the mod carries no config library. Mod Menu opens this,
+ * and everything saves when you leave.
+ */
+public class ShowMyMapsConfigScreen extends Screen {
+    private static final int ROW_HEIGHT = 24;
+    private static final int WIDGET_WIDTH = 310;
+
+    private final @Nullable Screen parent;
+
+    public ShowMyMapsConfigScreen(@Nullable Screen parent) {
+        super(Component.translatable("screen.show_my_maps.config"));
+        this.parent = parent;
+    }
+
+    @Override
+    protected void init() {
+        ShowMyMapsConfig config = ShowMyMapsConfig.get();
+        int columnWidth = (WIDGET_WIDTH - 4) / 2;
+        int leftColumn = this.width / 2 - WIDGET_WIDTH / 2;
+        int rightColumn = leftColumn + columnWidth + 4;
+        int top = 36;
+
+        addRenderableWidget(CycleButton.onOffBuilder(config.slotPreview)
+            .create(leftColumn, top, columnWidth, 20, Component.translatable("option.show_my_maps.slot_preview"),
+                (button, value) -> config.slotPreview = value));
+        addRenderableWidget(new IntSlider(rightColumn, top, columnWidth, "option.show_my_maps.slot_preview_size", 8, 16,
+            () -> config.slotPreviewSize, value -> config.slotPreviewSize = value));
+
+        addRenderableWidget(CycleButton.onOffBuilder(config.tooltipEnabled)
+            .create(leftColumn, top + ROW_HEIGHT, columnWidth, 20, Component.translatable("option.show_my_maps.tooltip"),
+                (button, value) -> config.tooltipEnabled = value));
+        addRenderableWidget(new IntSlider(rightColumn, top + ROW_HEIGHT, columnWidth, "option.show_my_maps.tooltip_size",
+            ShowMyMapsConfig.MIN_SIZE, ShowMyMapsConfig.MAX_SIZE, () -> config.tooltipSize, value -> config.tooltipSize = value));
+
+        addRenderableWidget(CycleButton.onOffBuilder(config.hudEnabled)
+            .create(leftColumn, top + ROW_HEIGHT * 2, columnWidth, 20, Component.translatable("option.show_my_maps.hud"),
+                (button, value) -> config.hudEnabled = value));
+        addRenderableWidget(new IntSlider(rightColumn, top + ROW_HEIGHT * 2, columnWidth, "option.show_my_maps.hud_size",
+            ShowMyMapsConfig.MIN_SIZE, ShowMyMapsConfig.MAX_SIZE, () -> config.hudSize, value -> config.hudSize = value));
+
+        addRenderableWidget(CycleButton.builder((ShowMyMapsConfig.Anchor anchor) -> Component.literal(anchor.name()), config.hudAnchor)
+            .withValues(ShowMyMapsConfig.Anchor.values())
+            .create(leftColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.hud_anchor"),
+                (button, value) -> config.hudAnchor = value));
+        addRenderableWidget(CycleButton.onOffBuilder(config.cacheMapData)
+            .create(rightColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.cache"),
+                (button, value) -> config.cacheMapData = value));
+
+        addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 4 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .build());
+    }
+
+    @Override
+    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        super.render(graphics, mouseX, mouseY, partialTick);
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, 16, -1);
+    }
+
+    @Override
+    public void onClose() {
+        ShowMyMapsConfig.get().save();
+
+        if (this.minecraft != null) {
+            this.minecraft.setScreen(this.parent);
+        }
+    }
+
+    private static class IntSlider extends AbstractSliderButton {
+        private final String key;
+        private final int min;
+        private final int max;
+        private final IntConsumer setter;
+
+        IntSlider(int x, int y, int width, String key, int min, int max, IntSupplier getter, IntConsumer setter) {
+            super(x, y, width, 20, Component.empty(), (getter.getAsInt() - min) / (double) (max - min));
+            this.key = key;
+            this.min = min;
+            this.max = max;
+            this.setter = setter;
+            updateMessage();
+        }
+
+        private int currentValue() {
+            return Mth.clamp((int) Math.round(this.min + this.value * (this.max - this.min)), this.min, this.max);
+        }
+
+        @Override
+        protected void updateMessage() {
+            setMessage(Component.translatable(this.key).append(": ").append(String.valueOf(currentValue())));
+        }
+
+        @Override
+        protected void applyValue() {
+            this.setter.accept(currentValue());
+        }
+    }
+}

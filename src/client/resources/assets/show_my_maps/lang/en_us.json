@@ -1,0 +1,16 @@
+{
+  "key.categories.show_my_maps": "Show My Maps",
+  "key.show_my_maps.toggle_hud": "Toggle map HUD",
+  "message.show_my_maps.hud": "Map HUD: %s",
+  "tooltip.show_my_maps.no_data": "Map data not received yet",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Map icons",
+  "option.show_my_maps.slot_preview_size": "Icon size",
+  "option.show_my_maps.tooltip": "Tooltip",
+  "option.show_my_maps.tooltip_size": "Tooltip size",
+  "option.show_my_maps.hud": "HUD",
+  "option.show_my_maps.hud_size": "HUD size",
+  "option.show_my_maps.hud_anchor": "HUD corner",
+  "option.show_my_maps.cache": "Remember maps",
+  "option.show_my_maps.container_tooltip": "Box contents"
+}

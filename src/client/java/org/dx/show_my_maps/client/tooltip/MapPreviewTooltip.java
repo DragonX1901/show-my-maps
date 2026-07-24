@@ -1,0 +1,65 @@
+package org.dx.show_my_maps.client.tooltip;
+
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.renderer.state.MapRenderState;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+import org.dx.show_my_maps.client.MapDataAccess;
+import org.dx.show_my_maps.client.MapPreviewRenderer;
+import org.dx.show_my_maps.client.ShowMyMapsConfig;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * Draws the map picture below the normal tooltip lines. Falls back to a text
+ * line when the client has never received data for this map id.
+ */
+public class MapPreviewTooltip implements ClientTooltipComponent {
+    private static final Component NO_DATA = Component.translatable("tooltip.show_my_maps.no_data")
+        .withStyle(ChatFormatting.DARK_GRAY);
+
+    private final MapId mapId;
+    private final MapRenderState renderState = new MapRenderState();
+
+    public MapPreviewTooltip(MapId mapId) {
+        this.mapId = mapId;
+    }
+
+    @Override
+    public int getWidth(Font font) {
+        return mapData() == null ? font.width(NO_DATA) : size();
+    }
+
+    @Override
+    public int getHeight(Font font) {
+        return mapData() == null ? font.lineHeight : size();
+    }
+
+    @Override
+    public boolean showTooltipWithItemInHand() {
+        return true;
+    }
+
+    @Override
+    public void renderImage(Font font, int x, int y, int width, int height, GuiGraphics graphics) {
+        MapItemSavedData data = mapData();
+
+        if (data == null) {
+            graphics.drawString(font, NO_DATA, x, y, -1);
+            return;
+        }
+
+        MapPreviewRenderer.draw(graphics, this.renderState, this.mapId, data, x, y, size());
+    }
+
+    private @Nullable MapItemSavedData mapData() {
+        return MapDataAccess.find(this.mapId);
+    }
+
+    private static int size() {
+        return ShowMyMapsConfig.get().tooltipSize;
+    }
+}

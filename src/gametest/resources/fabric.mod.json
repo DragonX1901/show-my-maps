@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "show_my_maps_test",
+  "version": "1.0.0",
+  "name": "SHOW MY MAPS Test",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "org.dx.show_my_maps.gametest.MapPreviewClientTest",
+      "org.dx.show_my_maps.gametest.DropAndShulkerTest",
+      "org.dx.show_my_maps.gametest.LogoShotTest"
+    ]
+  },
+  "depends": {
+    "show_my_maps": "*"
+  }
+}
