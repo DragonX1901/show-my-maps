@@ -1,0 +1,56 @@
+name: Release
+
+# Tag a commit to publish, e.g. git tag v1.0.1 && git push origin v1.0.1
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version number, without the leading v
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build
+        run: ./gradlew build --stacktrace
+
+      - name: Read version
+        id: version
+        run: |
+          version="${{ inputs.version }}"
+          if [ -z "$version" ]; then version="${GITHUB_REF_NAME#v}"; fi
+          echo "number=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to Modrinth and GitHub
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ANHah0JE
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          files: build/libs/!(*-sources).jar
+          name: ${{ steps.version.outputs.number }}
+          version: ${{ steps.version.outputs.number }}
+          version-type: release
+          loaders: fabric
+          game-versions: |
+            1.21.9
+            1.21.10
+            1.21.11
+          dependencies: |
+            fabric-api(required)
+            modmenu(optional)
