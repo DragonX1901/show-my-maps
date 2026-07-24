@@ -33,7 +33,7 @@ public class LogoShotTest implements FabricClientGameTest {
     public void runTest(ClientGameTestContext context) {
         TestSetup.mute(context);
 
-        try (TestSingleplayerContext singleplayer = context.worldBuilder().create()) {
+        try (TestSingleplayerContext singleplayer = TestSetup.createWorld(context)) {
             singleplayer.getClientWorld().waitForChunksRender();
 
             singleplayer.getServer().runOnServer(server -> {

@@ -1,14 +1,32 @@
 package org.dx.show_my_maps.gametest;
 
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.levelgen.presets.WorldPresets;
 
 /**
  * Shared setup. Tests run on a developer's machine, so they run silent.
  */
 public final class TestSetup {
     private TestSetup() {
+    }
+
+    /**
+     * A superflat world, because generating normal terrain takes longer than the
+     * test harness waits for on a CI runner. Nothing here needs real terrain: the
+     * maps get painted by the mod and then overwritten with art.
+     */
+    public static TestSingleplayerContext createWorld(ClientGameTestContext context) {
+        return context.worldBuilder()
+            .adjustSettings(settings -> settings.setWorldType(new WorldCreationUiState.WorldTypeEntry(
+                settings.getSettings().worldgenLoadContext()
+                    .lookupOrThrow(Registries.WORLD_PRESET)
+                    .getOrThrow(WorldPresets.FLAT))))
+            .create();
     }
 
     public static void mute(ClientGameTestContext context) {
