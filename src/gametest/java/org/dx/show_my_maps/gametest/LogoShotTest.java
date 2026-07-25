@@ -52,7 +52,6 @@ public class LogoShotTest implements FabricClientGameTest {
                 org.dx.show_my_maps.client.ShowMyMapsConfig config = org.dx.show_my_maps.client.ShowMyMapsConfig.get();
                 config.hudEnabled = true;
                 config.hudSize = 128;
-                config.hudAnchor = org.dx.show_my_maps.client.ShowMyMapsConfig.Anchor.TOP_LEFT;
                 config.hudOffsetX = 0;
                 config.hudOffsetY = 0;
                 minecraft.setScreen(null);

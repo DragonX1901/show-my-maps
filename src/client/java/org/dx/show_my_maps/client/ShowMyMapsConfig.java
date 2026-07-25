@@ -39,16 +39,9 @@ public class ShowMyMapsConfig {
     public boolean containerTooltip = true;
     /** Keep received map colours on disk, so maps you have seen once keep previewing. */
     public boolean cacheMapData = true;
-    public Anchor hudAnchor = Anchor.TOP_RIGHT;
+    /** Gap from the top right corner, where the preview sits. */
     public int hudOffsetX = 4;
     public int hudOffsetY = 4;
-
-    public enum Anchor {
-        TOP_LEFT,
-        TOP_RIGHT,
-        BOTTOM_LEFT,
-        BOTTOM_RIGHT
-    }
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {
@@ -93,9 +86,5 @@ public class ShowMyMapsConfig {
         this.tooltipSize = Mth.clamp(this.tooltipSize, MIN_SIZE, MAX_SIZE);
         this.hudSize = Mth.clamp(this.hudSize, MIN_SIZE, MAX_SIZE);
         this.slotPreviewSize = Mth.clamp(this.slotPreviewSize, 8, 16);
-
-        if (this.hudAnchor == null) {
-            this.hudAnchor = Anchor.TOP_RIGHT;
-        }
     }
 }

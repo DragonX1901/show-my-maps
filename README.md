@@ -36,8 +36,7 @@ the mod builds its screen from vanilla widgets, so no config library is needed.
 | `tooltipSize` | `128` | Tooltip preview size in GUI pixels (32–256) |
 | `hudEnabled` | `false` | Draw the HUD widget |
 | `hudSize` | `64` | HUD widget size in GUI pixels (32–256) |
-| `hudAnchor` | `TOP_RIGHT` | `TOP_LEFT`, `TOP_RIGHT`, `BOTTOM_LEFT`, `BOTTOM_RIGHT` |
-| `hudOffsetX` / `hudOffsetY` | `4` | Distance from the anchored corner |
+| `hudOffsetX` / `hudOffsetY` | `4` | Gap from the top right corner |
 | `containerTooltip` | `true` | Show shulker box contents as a slot grid |
 | `cacheMapData` | `true` | Keep received map colours on disk |
 

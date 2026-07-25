@@ -52,14 +52,8 @@ public class MapHudElement implements HudElement {
         }
 
         int size = config.hudSize;
-        int x = switch (config.hudAnchor) {
-            case TOP_LEFT, BOTTOM_LEFT -> config.hudOffsetX;
-            case TOP_RIGHT, BOTTOM_RIGHT -> graphics.guiWidth() - size - config.hudOffsetX;
-        };
-        int y = switch (config.hudAnchor) {
-            case TOP_LEFT, TOP_RIGHT -> config.hudOffsetY;
-            case BOTTOM_LEFT, BOTTOM_RIGHT -> graphics.guiHeight() - size - config.hudOffsetY;
-        };
+        int x = graphics.guiWidth() - size - config.hudOffsetX;
+        int y = config.hudOffsetY;
 
         MapPreviewRenderer.draw(graphics, this.renderState, mapId, data, x, y, size);
     }

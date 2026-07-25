@@ -10,7 +10,6 @@
   "option.show_my_maps.tooltip_size": "Tooltip size",
   "option.show_my_maps.hud": "HUD",
   "option.show_my_maps.hud_size": "HUD size",
-  "option.show_my_maps.hud_anchor": "HUD corner",
   "option.show_my_maps.cache": "Remember maps",
   "option.show_my_maps.container_tooltip": "Box contents"
 }

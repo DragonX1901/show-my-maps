@@ -55,10 +55,9 @@ public class ShowMyMapsConfigScreen extends Screen {
         addRenderableWidget(new IntSlider(rightColumn, top + ROW_HEIGHT * 2, columnWidth, "option.show_my_maps.hud_size",
             ShowMyMapsConfig.MIN_SIZE, ShowMyMapsConfig.MAX_SIZE, () -> config.hudSize, value -> config.hudSize = value));
 
-        addRenderableWidget(CycleButton.builder((ShowMyMapsConfig.Anchor anchor) -> Component.literal(anchor.name()), config.hudAnchor)
-            .withValues(ShowMyMapsConfig.Anchor.values())
-            .create(leftColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.hud_anchor"),
-                (button, value) -> config.hudAnchor = value));
+        addRenderableWidget(CycleButton.onOffBuilder(config.containerTooltip)
+            .create(leftColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.container_tooltip"),
+                (button, value) -> config.containerTooltip = value));
         addRenderableWidget(CycleButton.onOffBuilder(config.cacheMapData)
             .create(rightColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.cache"),
                 (button, value) -> config.cacheMapData = value));
