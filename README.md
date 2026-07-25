@@ -11,8 +11,6 @@ put the map in your hand.
   replacing vanilla's list of item names.
 * **Tooltip preview** — hover a filled map in your inventory, a chest, a hopper, the creative
   menu, anywhere a tooltip shows up. The map renders under the normal tooltip lines.
-* **HUD widget** — keeps one carried map on screen while it stays in your inventory. Off by
-  default; turn it on in the config screen.
 * Install on client and server. Singleplayer and LAN need nothing extra; on a vanilla server the client half still previews maps the server already sent.
 
 ## Config
@@ -27,9 +25,6 @@ screen closes.
 | `slotPreviewSize` | `16` | Icon size in GUI pixels (8–16) |
 | `tooltipEnabled` | `true` | Draw the picture in tooltips |
 | `tooltipSize` | `128` | Tooltip preview size in GUI pixels (32–256) |
-| `hudEnabled` | `false` | Draw the HUD widget |
-| `hudSize` | `64` | HUD widget size in GUI pixels (32–256) |
-| `hudOffsetX` / `hudOffsetY` | `4` | Gap from the top right corner |
 | `containerTooltip` | `true` | Show shulker box contents as a slot grid |
 | `cacheMapData` | `true` | Keep received map colours on disk |
 
@@ -117,8 +112,8 @@ JAVA_HOME=/path/to/jdk-25 ./gradlew ":26.2:build"
 
 `logo.png` is half vanilla, half this mod: the left side is Minecraft's own `filled_map` item
 sprite — a blank parchment, all you get without the mod — and the right side is the same map
-rendered by the mod. `LogoShotTest` regenerates the right half: it lays coloured wool in rings
-around the player, waits for the map to paint, and screenshots the HUD widget.
+rendered by the mod. `LogoShotTest` regenerates the right half: it paints the art into a map,
+hovers the slot, and screenshots the tooltip preview at full size.
 
 ## Build
 

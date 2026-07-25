@@ -8,15 +8,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 *///?} else {
 import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
 //?}
-//? if >=1.21.9 {
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
-//?} else {
-/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-*///?}
 import net.minecraft.client.Minecraft;
-import org.dx.show_my_maps.Show_my_maps;
-import org.dx.show_my_maps.client.hud.MapHudElement;
 import org.dx.show_my_maps.client.tooltip.ContainerPreviewTooltip;
 import org.dx.show_my_maps.client.tooltip.ContainerPreviewTooltipData;
 import org.dx.show_my_maps.client.tooltip.MapPreviewTooltip;
@@ -40,12 +32,6 @@ public class Show_my_mapsClient implements ClientModInitializer {
 
             return data instanceof ContainerPreviewTooltipData contents ? new ContainerPreviewTooltip(contents.items()) : null;
         });
-
-        //? if >=1.21.9 {
-        HudElementRegistry.attachElementBefore(VanillaHudElements.CHAT, Show_my_maps.id("map_preview"), new MapHudElement());
-        //?} else {
-        /*HudRenderCallback.EVENT.register(new MapHudElement());
-        *///?}
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, minecraft) -> MapDataCache.beginSession(minecraft));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, minecraft) -> MapDataCache.flush(minecraft.level));

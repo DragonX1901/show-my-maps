@@ -26,7 +26,7 @@ import org.dx.show_my_maps.client.tooltip.MapPreviewTooltipData;
 
 /**
  * Puts a filled map in an inventory slot the player is not holding, then checks
- * that both previews draw: the HUD widget and the hover tooltip.
+ * that the slot icon and the hover tooltip both draw it.
  */
 public class MapPreviewClientTest implements FabricClientGameTest {
     private static final int MAP_SLOT = 9;
@@ -37,6 +37,7 @@ public class MapPreviewClientTest implements FabricClientGameTest {
 
         try (TestSingleplayerContext singleplayer = TestSetup.createWorld(context)) {
             singleplayer.getClientWorld().waitForChunksRender();
+            singleplayer.getServer().runOnServer(TestSetup::daylight);
 
             singleplayer.getServer().runOnServer(server -> {
                 ServerPlayer player = server.getPlayerList().getPlayers().get(0);
@@ -103,7 +104,6 @@ public class MapPreviewClientTest implements FabricClientGameTest {
                     throw new AssertionError("map still blank without being held: " + painted + " of " + saved.colors.length + " pixels painted");
                 }
 
-                ShowMyMapsConfig.get().hudEnabled = true;
             });
 
             // Icon mode: art in the slot with the mouse nowhere near it.
@@ -121,14 +121,7 @@ public class MapPreviewClientTest implements FabricClientGameTest {
             System.out.println("SHOW_MY_MAPS_SCREENSHOT config=" + configShot);
             context.runOnClient(minecraft -> minecraft.setScreen(null));
 
-            context.waitTicks(20);
-            Path hudShot = context.takeScreenshot("hud_preview");
-            System.out.println("SHOW_MY_MAPS_SCREENSHOT hud=" + hudShot);
-
-            context.runOnClient(minecraft -> {
-                ShowMyMapsConfig.get().hudEnabled = false;
-                minecraft.setScreen(new InventoryScreen(minecraft.player));
-            });
+            context.runOnClient(minecraft -> minecraft.setScreen(new InventoryScreen(minecraft.player)));
 
             context.waitTicks(10);
 

@@ -18,7 +18,7 @@ import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
 /**
- * Shared blit for both the tooltip preview and the HUD widget.
+ * Shared blit for every place a map picture is drawn into a GUI.
  */
 public final class MapPreviewRenderer {
     /** A map picture is always 128 by 128 pixels. */

@@ -42,6 +42,7 @@ public class DropAndShulkerTest implements FabricClientGameTest {
 
         try (TestSingleplayerContext singleplayer = TestSetup.createWorld(context)) {
             singleplayer.getClientWorld().waitForChunksRender();
+            singleplayer.getServer().runOnServer(TestSetup::daylight);
 
             MapId boxedMapId = singleplayer.getServer().computeOnServer(server -> {
                 ServerPlayer player = server.getPlayerList().getPlayers().get(0);

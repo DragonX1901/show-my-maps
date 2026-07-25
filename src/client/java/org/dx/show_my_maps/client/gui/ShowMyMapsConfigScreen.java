@@ -53,21 +53,15 @@ public class ShowMyMapsConfigScreen extends Screen {
         addRenderableWidget(new IntSlider(rightColumn, top + ROW_HEIGHT, columnWidth, "option.show_my_maps.tooltip_size",
             ShowMyMapsConfig.MIN_SIZE, ShowMyMapsConfig.MAX_SIZE, () -> config.tooltipSize, value -> config.tooltipSize = value));
 
-        addRenderableWidget(CycleButton.onOffBuilder(config.hudEnabled)
-            .create(leftColumn, top + ROW_HEIGHT * 2, columnWidth, 20, Component.translatable("option.show_my_maps.hud"),
-                (button, value) -> config.hudEnabled = value));
-        addRenderableWidget(new IntSlider(rightColumn, top + ROW_HEIGHT * 2, columnWidth, "option.show_my_maps.hud_size",
-            ShowMyMapsConfig.MIN_SIZE, ShowMyMapsConfig.MAX_SIZE, () -> config.hudSize, value -> config.hudSize = value));
-
         addRenderableWidget(CycleButton.onOffBuilder(config.containerTooltip)
-            .create(leftColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.container_tooltip"),
+            .create(leftColumn, top + ROW_HEIGHT * 2, columnWidth, 20, Component.translatable("option.show_my_maps.container_tooltip"),
                 (button, value) -> config.containerTooltip = value));
         addRenderableWidget(CycleButton.onOffBuilder(config.cacheMapData)
-            .create(rightColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.cache"),
+            .create(rightColumn, top + ROW_HEIGHT * 2, columnWidth, 20, Component.translatable("option.show_my_maps.cache"),
                 (button, value) -> config.cacheMapData = value));
 
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 4 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 3 + 8, this.height - 28), WIDGET_WIDTH, 20)
             .build());
     }
 

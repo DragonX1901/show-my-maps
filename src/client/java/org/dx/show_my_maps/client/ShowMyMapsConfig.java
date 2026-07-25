@@ -27,10 +27,6 @@ public class ShowMyMapsConfig {
     public boolean tooltipEnabled = true;
     /** Tooltip preview size in GUI pixels. A map is 128x128. */
     public int tooltipSize = 128;
-    /** Draw a persistent map preview on the HUD. */
-    public boolean hudEnabled = false;
-    /** HUD preview size in GUI pixels. */
-    public int hudSize = 64;
     /** Draw the map picture instead of the parchment sprite in every slot. */
     public boolean slotPreview = true;
     /** Size of that slot picture. A vanilla item icon is 16. */
@@ -39,9 +35,6 @@ public class ShowMyMapsConfig {
     public boolean containerTooltip = true;
     /** Keep received map colours on disk, so maps you have seen once keep previewing. */
     public boolean cacheMapData = true;
-    /** Gap from the top right corner, where the preview sits. */
-    public int hudOffsetX = 4;
-    public int hudOffsetY = 4;
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {
@@ -84,7 +77,6 @@ public class ShowMyMapsConfig {
 
     private void clamp() {
         this.tooltipSize = Mth.clamp(this.tooltipSize, MIN_SIZE, MAX_SIZE);
-        this.hudSize = Mth.clamp(this.hudSize, MIN_SIZE, MAX_SIZE);
         this.slotPreviewSize = Mth.clamp(this.slotPreviewSize, 8, 16);
     }
 }

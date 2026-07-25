@@ -46,7 +46,8 @@ public class DroppedMapEntityMixin {
     private static final MapRenderState show_my_maps$renderState = new MapRenderState();
     //?}
     @Unique
-    private static final float show_my_maps$SCALE = 1.0F / 256.0F;
+    // 128 map pixels across a third of a block, about the size of the item sprite it replaces.
+    private static final float show_my_maps$SCALE = 1.0F / 384.0F;
     @Unique
     private static final float show_my_maps$HALF_HEIGHT = 64.0F * show_my_maps$SCALE;
 

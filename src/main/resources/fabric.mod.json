@@ -3,7 +3,7 @@
   "id": "show_my_maps",
   "version": "${version}",
   "name": "SHOW MY MAPS",
-  "description": "Preview a filled map's picture in its tooltip and on the HUD, without holding the map.",
+  "description": "See a filled map's picture in its slot, its tooltip and on the ground, without holding the map.",
   "authors": ["DragonX1901"],
   "contact": {},
   "license": "MIT",

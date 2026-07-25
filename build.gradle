@@ -109,6 +109,14 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
     def volumes = ["master", "music", "ambient", "weather", "block", "hostile", "neutral", "player", "record", "voice"]
     def lines = volumes.collect { "soundCategory_${it}:0.0" }
 
+    // Gallery screenshots want a bigger window than CI does: -Pshot_size=1280x720
+    def shotSize = project.findProperty("shot_size")
+
+    if (shotSize) {
+        def (width, height) = shotSize.tokenize("x")
+        lines += ["overrideWidth:${width}", "overrideHeight:${height}"]
+    }
+
     if (lowSpec) {
         // The test client has to load a world within a fixed tick budget, and CI
         // runners draw with llvmpipe on few cores. Cut everything that costs frames.
