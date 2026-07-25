@@ -113,6 +113,10 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
         // The test client has to load a world within a fixed tick budget, and CI
         // runners draw with llvmpipe on few cores. Cut everything that costs frames.
         lines += [
+            // The loading screen blurs its background through a post pass every frame,
+            // which on a software renderer eats the whole tick budget the harness gives
+            // the world to load in.
+            "menuBackgroundBlurriness:0",
             'graphicsPreset:"fast"',
             "renderDistance:3",
             "simulationDistance:5",
