@@ -67,7 +67,8 @@ public class MapHudElement implements HudElement {
         LocalPlayer player = minecraft.player;
         ClientLevel level = minecraft.level;
 
-        //? if >=26 {
+        // 26.2 moved the flag out of the options and onto the HUD itself.
+        //? if >=26.2 {
         /*if (player == null || level == null || minecraft.gui.hud.isHidden()) {
         *///?} else {
         if (player == null || level == null || minecraft.options.hideGui) {

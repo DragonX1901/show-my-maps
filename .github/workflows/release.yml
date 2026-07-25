@@ -26,6 +26,8 @@ jobs:
             game-versions: "1.21\n1.21.1"
           - version: "1.21.11"
             game-versions: "1.21.9\n1.21.10\n1.21.11"
+          - version: "26.1.2"
+            game-versions: "26.1\n26.1.1\n26.1.2"
           - version: "26.2"
             game-versions: "26.2"
     steps:

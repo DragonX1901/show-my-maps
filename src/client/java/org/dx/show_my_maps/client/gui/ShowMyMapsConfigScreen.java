@@ -90,7 +90,7 @@ public class ShowMyMapsConfigScreen extends Screen {
         ShowMyMapsConfig.get().save();
 
         if (this.minecraft != null) {
-            //? if >=26 {
+            //? if >=26.2 {
             /*this.minecraft.setScreenAndShow(this.parent);
             *///?} else {
             this.minecraft.setScreen(this.parent);
