@@ -36,10 +36,14 @@ public final class ContainerMapSync {
     }
 
     private static void syncOpenContainer(ServerPlayer player, ShowMyMapsServerConfig config) {
+        //? if >=1.21.9 {
         ServerLevel level = player.level();
+        //?} else {
+        /*ServerLevel level = player.serverLevel();
+        *///?}
 
         // Maps tucked inside a shulker box are never ticked, wherever the box sits.
-        for (ItemStack stack : player.getInventory().getNonEquipmentItems()) {
+        for (ItemStack stack : carriedItems(player)) {
             syncNested(player, level, config, stack);
         }
 
@@ -82,6 +86,24 @@ public final class ContainerMapSync {
         }
     }
 
+    /** Everything the player carries, however the version happens to store it. */
+    private static Iterable<ItemStack> carriedItems(ServerPlayer player) {
+        //? if >=1.21.9 {
+        return player.getInventory().getNonEquipmentItems();
+        //?} else {
+        /*return player.getInventory().items;
+        *///?}
+    }
+
+    /** The stacks inside a container item. */
+    private static Iterable<ItemStack> containedItems(ItemContainerContents contents) {
+        //? if >=26 {
+        /*return contents.nonEmptyItemCopyStream().toList();
+        *///?} else {
+        return contents.nonEmptyItems();
+        //?}
+    }
+
     /** Maps held inside a container item, such as a shulker box. */
     private static void syncNested(ServerPlayer player, ServerLevel level, ShowMyMapsServerConfig config, ItemStack holder) {
         if (holder.isEmpty()) {
@@ -94,7 +116,7 @@ public final class ContainerMapSync {
             return;
         }
 
-        for (ItemStack stack : contents.nonEmptyItems()) {
+        for (ItemStack stack : containedItems(contents)) {
             if (!(stack.getItem() instanceof MapItem mapItem)) {
                 continue;
             }

@@ -1,0 +1,10 @@
+plugins {
+    id 'dev.kikugie.stonecutter'
+}
+
+// Stonecutter controller. The active version is the one the IDE and a plain
+// ./gradlew build work against; chiseledBuild covers every version at once.
+stonecutter.active("1.21.11")
+
+// Loom does not like several versions remapping at the same time.
+stonecutter.tasks.order("build")

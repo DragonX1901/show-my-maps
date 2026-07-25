@@ -14,7 +14,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.multiplayer.ServerData;
+//? if >=1.21.9 {
 import net.minecraft.resources.Identifier;
+//?} else {
+/*import net.minecraft.resources.ResourceLocation;
+*///?}
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -104,7 +108,11 @@ public final class MapDataCache {
 
             byte scale = data.readByte();
             boolean locked = data.readBoolean();
+            //? if >=1.21.9 {
             ResourceKey<Level> dimension = ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, Identifier.parse(data.readUTF()));
+            //?} else {
+            /*ResourceKey<Level> dimension = ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, ResourceLocation.parse(data.readUTF()));
+            *///?}
             byte[] colours = new byte[COLOUR_COUNT];
             data.readFully(colours);
 
@@ -129,7 +137,11 @@ public final class MapDataCache {
                 data.writeInt(FORMAT);
                 data.writeByte(saved.scale);
                 data.writeBoolean(saved.locked);
+                //? if >=1.21.9 {
                 data.writeUTF(saved.dimension.identifier().toString());
+                //?} else {
+                /*data.writeUTF(saved.dimension.location().toString());
+                *///?}
                 data.write(saved.colors, 0, COLOUR_COUNT);
             }
         } catch (IOException e) {

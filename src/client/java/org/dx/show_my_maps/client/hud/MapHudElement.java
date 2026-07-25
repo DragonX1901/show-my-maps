@@ -1,12 +1,19 @@
 package org.dx.show_my_maps.client.hud;
 
+//? if >=1.21.9 {
 import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
+//?} else {
+/*import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+*///?}
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
+//? if >=26 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -14,17 +21,42 @@ import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.dx.show_my_maps.client.MapDataAccess;
 import org.dx.show_my_maps.client.MapPreviewRenderer;
+import org.dx.show_my_maps.client.MapPreviewState;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 import org.jetbrains.annotations.Nullable;
 
 /**
  * Keeps one carried map on screen while it sits in the inventory instead of a hand.
  */
+//? if >=1.21.9 {
 public class MapHudElement implements HudElement {
-    private final MapRenderState renderState = new MapRenderState();
+//?} else {
+/*public class MapHudElement implements HudRenderCallback {
+*///?}
+    private final MapPreviewState preview = new MapPreviewState();
 
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, DeltaTracker deltaTracker) {
+        draw(graphics);
+    }
+    *///?} elif >=1.21.9 {
     @Override
     public void render(GuiGraphics graphics, DeltaTracker deltaTracker) {
+        draw(graphics);
+    }
+    //?} else {
+    /*@Override
+    public void onHudRender(GuiGraphics graphics, DeltaTracker deltaTracker) {
+        draw(graphics);
+    }
+    *///?}
+
+    //? if >=26 {
+    /*private void draw(GuiGraphicsExtractor graphics) {
+    *///?} else {
+    private void draw(GuiGraphics graphics) {
+    //?}
         ShowMyMapsConfig config = ShowMyMapsConfig.get();
 
         if (!config.hudEnabled) {
@@ -35,7 +67,11 @@ public class MapHudElement implements HudElement {
         LocalPlayer player = minecraft.player;
         ClientLevel level = minecraft.level;
 
+        //? if >=26 {
+        /*if (player == null || level == null || minecraft.gui.hud.isHidden()) {
+        *///?} else {
         if (player == null || level == null || minecraft.options.hideGui) {
+        //?}
             return;
         }
 
@@ -55,7 +91,7 @@ public class MapHudElement implements HudElement {
         int x = graphics.guiWidth() - size - config.hudOffsetX;
         int y = config.hudOffsetY;
 
-        MapPreviewRenderer.draw(graphics, this.renderState, mapId, data, x, y, size);
+        MapPreviewRenderer.draw(graphics, this.preview, mapId, data, x, y, size);
     }
 
     /**
@@ -72,7 +108,11 @@ public class MapHudElement implements HudElement {
         Inventory inventory = player.getInventory();
 
         for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+            //? if >=1.21.9 {
             if (slot == inventory.getSelectedSlot()) {
+            //?} else {
+            /*if (slot == inventory.selected) {
+            *///?}
                 continue;
             }
 

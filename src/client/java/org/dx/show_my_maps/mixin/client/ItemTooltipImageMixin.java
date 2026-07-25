@@ -32,7 +32,11 @@ public class ItemTooltipImageMixin {
             ItemContainerContents contents = stack.get(DataComponents.CONTAINER);
 
             if (contents != null) {
+                //? if >=26 {
+                /*List<ItemStack> items = contents.allItemsCopyStream().toList();
+                *///?} else {
                 List<ItemStack> items = contents.stream().toList();
+                //?}
 
                 if (!items.isEmpty()) {
                     cir.setReturnValue(Optional.of(new ContainerPreviewTooltipData(items)));

@@ -1,9 +1,25 @@
-plugins {
-    id 'fabric-loom' version '1.17-SNAPSHOT'
-    id 'maven-publish'
+// Loom is loaded through buildscript rather than the plugins block, because each
+// version needs its own Loom: 26.x only works on the alphas that understand an
+// unobfuscated Minecraft.
+buildscript {
+    repositories {
+        maven { url = "https://maven.fabricmc.net/" }
+        gradlePluginPortal()
+    }
+
+    dependencies {
+        classpath "net.fabricmc:fabric-loom:${project.loom_version}"
+    }
 }
 
-version = project.mod_version
+// 26.x ships without obfuscation. Loom has a separate plugin id for that case: it
+// skips mappings and remapping entirely.
+ext.unobfuscated = project.findProperty("unobfuscated") == "true"
+
+apply plugin: unobfuscated ? "net.fabricmc.fabric-loom" : "fabric-loom"
+apply plugin: "maven-publish"
+
+version = "${project.mod_version}+${project.minecraft_version}"
 group = project.maven_group
 
 base {
@@ -21,17 +37,23 @@ loom {
     }
 }
 
+// The client gametest API only exists from 1.21.9 on, so the tests build and run
+// against the newest version and cover the shared code for all of them.
+ext.clientGameTests = project.findProperty("client_gametests") == "true"
+
 fabricApi {
     configureDataGeneration {
         client = true
     }
 
-    configureTests {
-        createSourceSet = true
-        modId = "show_my_maps_test"
-        enableGameTests = false
-        enableClientGameTests = true
-        eula = true
+    if (clientGameTests) {
+        configureTests {
+            createSourceSet = true
+            modId = "show_my_maps_test"
+            enableGameTests = false
+            enableClientGameTests = true
+            eula = true
+        }
     }
 }
 
@@ -53,21 +75,31 @@ repositories {
     // for more information about repositories.
 }
 
-dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings loom.officialMojangMappings()
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+// Without obfuscation there is nothing to remap, so Loom drops the mod* configurations.
+def modApi = unobfuscated ? "implementation" : "modImplementation"
+def modCompileOnlyConf = unobfuscated ? "compileOnly" : "modCompileOnly"
+def modRuntimeConf = unobfuscated ? "runtimeOnly" : "modLocalRuntime"
 
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+dependencies {
+    // To change the versions see versions/<game version>/gradle.properties
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
+    if (!unobfuscated) {
+        mappings loom.officialMojangMappings()
+    }
+
+    add(modApi, "net.fabricmc:fabric-loader:${project.loader_version}")
+    add(modApi, "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
 
     // Optional at runtime: the config screen is registered through Mod Menu's entrypoint,
     // which Fabric only loads when Mod Menu is installed.
-    modCompileOnly "com.terraformersmc:modmenu:${project.modmenu_version}"
-    modLocalRuntime "com.terraformersmc:modmenu:${project.modmenu_version}"
+    add(modCompileOnlyConf, "com.terraformersmc:modmenu:${project.modmenu_version}")
+    add(modRuntimeConf, "com.terraformersmc:modmenu:${project.modmenu_version}")
 
     // Dev-only, to check the two mods coexist. Never a runtime requirement.
-    modLocalRuntime "maven.modrinth:shulkerboxtooltip:${project.shulkerboxtooltip_version}"
+    if (project.shulkerboxtooltip_version) {
+        add(modRuntimeConf, "maven.modrinth:shulkerboxtooltip:${project.shulkerboxtooltip_version}")
+    }
 }
 
 // Keep dev runs silent: the test client opens on a real audio device.
@@ -100,8 +132,10 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
 
 // Minecraft sizes its chunk worker pool from the core count, and CI runners are
 // small enough that spawn chunks never finish inside the harness tick budget.
-tasks.named("runClientGameTest") {
-    jvmArgs "-Dmax.bg.threads=4"
+if (clientGameTests) {
+    tasks.named("runClientGameTest") {
+        jvmArgs "-Dmax.bg.threads=4"
+    }
 }
 
 tasks.matching { it.name in ["runClient", "runClientGameTest", "runServer"] }.configureEach {
@@ -115,16 +149,20 @@ processResources {
     inputs.property "version", project.version
     inputs.property "minecraft_version", project.minecraft_version
     inputs.property "loader_version", project.loader_version
+    inputs.property "mod_minecraft_range", project.mod_minecraft_range
+    inputs.property "fabric_api_range", project.fabric_api_range
     filteringCharset "UTF-8"
 
     filesMatching("fabric.mod.json") {
         expand "version": project.version,
                 "minecraft_version": project.minecraft_version,
-                "loader_version": project.loader_version
+                "loader_version": project.loader_version,
+                "mod_minecraft_range": project.mod_minecraft_range,
+                "fabric_api_range": project.fabric_api_range
     }
 }
 
-def targetJavaVersion = 21
+def targetJavaVersion = project.java_version as int
 tasks.withType(JavaCompile).configureEach {
     // ensure that the encoding is set to UTF-8, no matter what the system default is
     // this fixes some edge cases with special characters not displaying correctly

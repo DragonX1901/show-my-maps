@@ -1,6 +1,10 @@
 package org.dx.show_my_maps.client.gui;
 
+//? if >=26 {
+/*import net.minecraft.client.gui.GuiGraphicsExtractor;
+*///?} else {
 import net.minecraft.client.gui.GuiGraphics;
+//?}
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
@@ -67,18 +71,30 @@ public class ShowMyMapsConfigScreen extends Screen {
             .build());
     }
 
+    //? if >=26 {
+    /*@Override
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+        graphics.centeredText(this.font, this.title, this.width / 2, 16, -1);
+    }
+    *///?} else {
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
         graphics.drawCenteredString(this.font, this.title, this.width / 2, 16, -1);
     }
+    //?}
 
     @Override
     public void onClose() {
         ShowMyMapsConfig.get().save();
 
         if (this.minecraft != null) {
+            //? if >=26 {
+            /*this.minecraft.setScreenAndShow(this.parent);
+            *///?} else {
             this.minecraft.setScreen(this.parent);
+            //?}
         }
     }
 

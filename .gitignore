@@ -19,3 +19,6 @@ hs_err_pid*
 
 # Common working directory
 run
+
+# Stonecutter puts a dev run directory in each version project
+versions/*/run/

@@ -81,11 +81,18 @@ reconnect, then refills.
 
 ## Versions
 
-One jar covers **1.21.9, 1.21.10 and 1.21.11**. It is compiled against 1.21.11 and remapped to
-intermediary names, which do not change across those releases, so the Mojmap rename of
-`ResourceLocation` to `Identifier` in 1.21.11 is a compile-time detail only.
+Three jars, one source tree. [Stonecutter](https://stonecutter.kikugie.dev/) keeps the version
+differences in comment blocks and builds each target from `versions/<game version>/`.
 
-What was checked, so you know what the support claim rests on:
+| Jar | Covers | Notes |
+| --- | --- | --- |
+| `1.0.0+1.21.1` | 1.21, 1.21.1 | Older map renderer: `PoseStack` and `MultiBufferSource`, HUD through `HudRenderCallback` |
+| `1.0.0+1.21.11` | 1.21.9, 1.21.10, 1.21.11 | Render-state architecture; the version the tests run on |
+| `1.0.0+26.2` | 26.2 | Unobfuscated game, Java 25, `GuiGraphics` renamed to `GuiGraphicsExtractor` |
+
+The 1.21.11 jar covers three releases because Loom remaps to intermediary names, which do not
+change across them, so the Mojmap rename of `ResourceLocation` to `Identifier` in 1.21.11 is a
+compile-time detail only. What that claim rests on:
 
 * Every mixin target — `Item.getTooltipImage`, the private `GuiGraphics.renderItem`,
   `GuiGraphics.submitMapRenderState`, `ItemEntityRenderer.submit` / `extractRenderState`,
@@ -94,9 +101,23 @@ What was checked, so you know what the support claim rests on:
 * The built jar launches to the title screen on 1.21.9 and 1.21.10 with no mixin failures.
 * Full in-game behaviour (`runClientGameTest`) is exercised on 1.21.11.
 
-Older 1.21 releases need a separate branch: the map renderer took `PoseStack` and
-`MultiBufferSource` before the render-state rework. 26.x needs its own build too — it wants
-Java 25, and Loom 1.17 cannot resolve official mappings for it yet.
+The 1.21.1 and 26.2 jars are verified by building and launching a client to the title screen
+with no mixin failures. The client gametest API only exists from 1.21.9 on, so the in-game
+tests cannot run on 1.21.1, and they run against the shared code that all three jars compile.
+
+### Building a specific version
+
+```
+./gradlew ":1.21.1:build"       # or 1.21.11, 26.2
+./gradlew build                 # all three
+./gradlew "Set active project to 1.21.1"   # what the IDE and src/ follow
+```
+
+26.2 needs Gradle itself running on Java 25, because its Loom alpha requires it:
+
+```
+JAVA_HOME=/path/to/jdk-25 ./gradlew ":26.2:build"
+```
 
 ## Logo
 

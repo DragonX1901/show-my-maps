@@ -16,18 +16,31 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    strategy:
+      # One Modrinth version per game version, uploaded one at a time.
+      max-parallel: 1
+      fail-fast: false
+      matrix:
+        include:
+          - version: "1.21.1"
+            game-versions: "1.21\n1.21.1"
+          - version: "1.21.11"
+            game-versions: "1.21.9\n1.21.10\n1.21.11"
+          - version: "26.2"
+            game-versions: "26.2"
     steps:
       - uses: actions/checkout@v7
 
+      # 26.x needs a Java 25 Gradle daemon, because its Loom alpha is built for it.
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - uses: gradle/actions/setup-gradle@v6
 
-      - name: Build
-        run: ./gradlew build --stacktrace
+      - name: Build ${{ matrix.version }}
+        run: ./gradlew ":${{ matrix.version }}:build" --stacktrace
 
       - name: Read version
         id: version
@@ -42,15 +55,12 @@ jobs:
           modrinth-id: ANHah0JE
           modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          files: build/libs/!(*-sources).jar
-          name: ${{ steps.version.outputs.number }}
-          version: ${{ steps.version.outputs.number }}
+          files: versions/${{ matrix.version }}/build/libs/!(*-sources).jar
+          name: ${{ steps.version.outputs.number }} for ${{ matrix.version }}
+          version: ${{ steps.version.outputs.number }}+${{ matrix.version }}
           version-type: release
           loaders: fabric
-          game-versions: |
-            1.21.9
-            1.21.10
-            1.21.11
+          game-versions: ${{ matrix.game-versions }}
           dependencies: |
             fabric-api(required)
             modmenu(optional)
