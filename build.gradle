@@ -186,7 +186,8 @@ java {
 }
 
 jar {
-    from("LICENSE") {
+    // The licence sits at the repo root, one level up from each version project.
+    from(rootProject.file("LICENSE")) {
         rename { "${it}_${project.archives_base_name}" }
     }
 }

@@ -12,21 +12,14 @@ put the map in your hand.
 * **Tooltip preview** — hover a filled map in your inventory, a chest, a hopper, the creative
   menu, anywhere a tooltip shows up. The map renders under the normal tooltip lines.
 * **HUD widget** — keeps one carried map on screen while it stays in your inventory. Off by
-  default; press `M` to turn it on.
+  default; turn it on in the config screen.
 * Install on client and server. Singleplayer and LAN need nothing extra; on a vanilla server the client half still previews maps the server already sent.
-
-## Keys
-
-| Key | Action |
-| --- | --- |
-| `M` | Toggle the HUD widget |
-
-Rebind under Controls → Miscellaneous. Settings also live in Mod Menu, if you have it —
-the mod builds its screen from vanilla widgets, so no config library is needed.
 
 ## Config
 
-`config/show_my_maps.json`, written when you toggle a key.
+Everything is in the settings screen, which Mod Menu opens. It is built from vanilla widgets,
+so the mod needs no config library. The file is `config/show_my_maps.json`, written when the
+screen closes.
 
 | Field | Default | Meaning |
 | --- | --- | --- |
@@ -132,4 +125,9 @@ around the player, waits for the map to paint, and screenshots the HUD widget.
 ./gradlew build
 ```
 
-Jar lands in `build/libs/`. Use the plain `SHOW_MY_MAPS-<version>.jar`, not `-sources`.
+Jars land in `versions/<game version>/build/libs/`. Use the plain
+`SHOW_MY_MAPS-<version>.jar`, not `-sources`.
+
+## License
+
+MIT, see [LICENSE](LICENSE).

@@ -1,7 +1,4 @@
 {
-  "key.categories.show_my_maps": "Show My Maps",
-  "key.show_my_maps.toggle_hud": "Toggle map HUD",
-  "message.show_my_maps.hud": "Map HUD: %s",
   "tooltip.show_my_maps.no_data": "Map data not received yet",
   "screen.show_my_maps.config": "Show My Maps",
   "option.show_my_maps.slot_preview": "Map icons",
