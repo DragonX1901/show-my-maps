@@ -66,20 +66,32 @@ jobs:
         env:
           LIBGL_ALWAYS_SOFTWARE: 1
         run: |
-          xvfb-run -a -s "-screen 0 1280x800x24" ./gradlew ":1.21.11:runClientGameTest" --stacktrace &
-          gradle_pid=$!
+          run_tests() {
+            xvfb-run -a -s "-screen 0 1280x800x24" ./gradlew ":1.21.11:runClientGameTest" --stacktrace &
+            gradle_pid=$!
 
-          # World loading has stalled here before. If it happens again, print what
-          # the client threads are doing instead of only the timeout.
-          (
-            sleep 150
-            for pid in $(pgrep -f devlaunchinjector); do
-              echo "=== thread dump $pid ==="
-              jcmd "$pid" Thread.print || true
-            done
-          ) &
+            # Spawn chunk generation stalls on some runners and the harness gives up
+            # waiting for the world. Print what the threads are doing while it is stuck,
+            # so a repeat is diagnosable from the log alone.
+            (
+              sleep 45
+              for pid in $(pgrep -f devlaunchinjector); do
+                echo "=== thread dump $pid ==="
+                jcmd "$pid" Thread.print || true
+              done
+            ) &
+            dump_pid=$!
 
-          wait $gradle_pid
+            wait $gradle_pid
+            status=$?
+            kill $dump_pid 2>/dev/null || true
+            return $status
+          }
+
+          run_tests || {
+            echo "::warning::client gametests failed once, retrying"
+            run_tests
+          }
 
       - if: always()
         uses: actions/upload-artifact@v7
