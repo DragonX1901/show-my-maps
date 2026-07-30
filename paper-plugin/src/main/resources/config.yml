@@ -1,0 +1,17 @@
+# How often each player's surroundings are checked, in ticks. 20 is once a second.
+scan-interval-ticks: 20
+
+# A map is 16 KB on the wire, so one is not sent to the same player again for this
+# long. Raise it if the maps on your server never change; lower it if players paint.
+resend-seconds: 60
+
+# Maps in whatever inventory the player has open: chests, auction and shop pages,
+# hoppers, anything a plugin puts on screen. This is the one that matters.
+open-containers: true
+
+# Maps packed inside a shulker box or bundle the player carries.
+shulker-contents: true
+
+# Maps lying on the ground near the player.
+nearby-items: true
+nearby-radius: 12

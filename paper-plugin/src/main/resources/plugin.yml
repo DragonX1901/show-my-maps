@@ -1,0 +1,8 @@
+name: ShowMyMaps
+version: '${version}'
+main: org.dx.showmymaps.paper.ShowMyMapsPlugin
+api-version: '1.21'
+authors: [DragonX1901]
+description: Sends filled map colours for maps in open GUIs, in shulker boxes and on the ground.
+website: https://modrinth.com/mod/show-my-maps
+folia-supported: true

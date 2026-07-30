@@ -22,3 +22,7 @@ run
 
 # Stonecutter puts a dev run directory in each version project
 versions/*/run/
+
+# Paper plugin build output
+paper-plugin/build/
+paper-plugin/.gradle/
