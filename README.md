@@ -56,6 +56,10 @@ set vanilla leaves out. Build it with `./gradlew -p paper-plugin build` and drop
 `plugins/`. Settings live in `config.yml`; per-player schedulers keep it correct on Folia and
 ShreddedPaper.
 
+Either half announces itself and its version to a joining client, so the mod can tell "this
+server sends nothing" apart from "this server is behind" and say which. Anything older than
+1.0.3 cannot announce itself and reads as absent.
+
 Owners decide who gets previews. Everyone holds `showmymaps.see` unless it is taken away, so a
 server selling map art can revoke it and grant it to a rank, or list worlds under
 `disabled-worlds`. A player without it is never sent the colours, so there is nothing on their

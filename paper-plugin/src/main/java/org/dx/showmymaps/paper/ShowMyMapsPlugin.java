@@ -1,5 +1,6 @@
 package org.dx.showmymaps.paper;
 
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -44,6 +45,13 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
      */
     public static final String SEE_PERMISSION = "showmymaps.see";
 
+    /**
+     * The mod asks whichever server half is present to name itself, so a client can
+     * tell "this server sends nothing" apart from "this server is behind". The
+     * payload is the version as plain UTF-8, which is what the mod's codec reads.
+     */
+    public static final String PRESENCE_CHANNEL = "show_my_maps:presence";
+
     /** Map ids already sent to a player, and when, so the same 16 KB is not resent every pass. */
     private final Map<UUID, Map<Integer, Long>> sent = new HashMap<>();
 
@@ -60,6 +68,7 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         saveDefaultConfig();
         readConfig();
 
+        getServer().getMessenger().registerOutgoingPluginChannel(this, PRESENCE_CHANNEL);
         getServer().getPluginManager().registerEvents(this, this);
 
         // Per-player tasks, so this stays correct on region threaded forks such as
@@ -71,6 +80,7 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
+        getServer().getMessenger().unregisterOutgoingPluginChannel(this, PRESENCE_CHANNEL);
         sent.clear();
     }
 
@@ -99,7 +109,20 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
-        schedule(event.getPlayer());
+        Player player = event.getPlayer();
+        schedule(player);
+
+        // A moment after joining, once the client has said which channels it takes.
+        player.getScheduler().runDelayed(this, task -> announce(player), null, 20L);
+    }
+
+    private void announce(Player player) {
+        if (!player.isOnline() || !player.getListeningPluginChannels().contains(PRESENCE_CHANNEL)) {
+            return;
+        }
+
+        player.sendPluginMessage(this, PRESENCE_CHANNEL,
+            getPluginMeta().getVersion().getBytes(StandardCharsets.UTF_8));
     }
 
     @EventHandler

@@ -33,6 +33,8 @@ public class Show_my_mapsClient implements ClientModInitializer {
             return data instanceof ContainerPreviewTooltipData contents ? new ContainerPreviewTooltip(contents.items()) : null;
         });
 
+        ServerSupport.listen();
+
         ClientPlayConnectionEvents.JOIN.register((handler, sender, minecraft) -> {
             MapDataCache.beginSession(minecraft);
             ServerSupport.beginSession();

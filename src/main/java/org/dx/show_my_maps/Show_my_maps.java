@@ -2,7 +2,9 @@ package org.dx.show_my_maps;
 
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.fabricmc.loader.api.FabricLoader;
 //? if >=1.21.9 {
 import net.minecraft.resources.Identifier;
 //?} else {
@@ -25,15 +27,27 @@ public class Show_my_maps implements ModInitializer {
     }
     *///?}
 
+    /** What this build calls itself, so a client can tell a stale server half apart. */
+    public static String version() {
+        return FabricLoader.getInstance().getModContainer(MOD_ID)
+            .map(container -> container.getMetadata().getVersion().getFriendlyString())
+            .orElse("unknown");
+    }
+
     @Override
     public void onInitialize() {
-        // Registering the channel is the whole point; the handler never fires.
         //? if >=26 {
-        /*PayloadTypeRegistry.serverboundPlay().register(ShowMyMapsPresence.TYPE, ShowMyMapsPresence.CODEC);
+        /*PayloadTypeRegistry.clientboundPlay().register(ShowMyMapsPresence.TYPE, ShowMyMapsPresence.CODEC);
         *///?} else {
-        PayloadTypeRegistry.playC2S().register(ShowMyMapsPresence.TYPE, ShowMyMapsPresence.CODEC);
+        PayloadTypeRegistry.playS2C().register(ShowMyMapsPresence.TYPE, ShowMyMapsPresence.CODEC);
         //?}
-        ServerPlayNetworking.registerGlobalReceiver(ShowMyMapsPresence.TYPE, (payload, context) -> {
+
+        // Tell a joining client which half is here and how old it is. A client with
+        // no mod never registered the channel, so nothing is sent to it.
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            if (ServerPlayNetworking.canSend(handler, ShowMyMapsPresence.TYPE)) {
+                sender.sendPacket(new ShowMyMapsPresence(version()));
+            }
         });
 
         ContainerMapSync.register();
