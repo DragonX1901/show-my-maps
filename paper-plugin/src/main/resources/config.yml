@@ -15,3 +15,9 @@ shulker-contents: true
 # Maps lying on the ground near the player.
 nearby-items: true
 nearby-radius: 12
+
+# Worlds where nothing is sent, by name. A server that sells map art can leave the
+# shop world out, or turn previews off everywhere and grant them to a rank instead:
+# take showmymaps.see away from default and give it to whoever should have it. A
+# player without it is simply never sent the colours, so there is nothing to draw.
+disabled-worlds: []

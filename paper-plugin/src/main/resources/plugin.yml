@@ -6,3 +6,7 @@ authors: [DragonX1901]
 description: Sends filled map colours for maps in open GUIs, in shulker boxes and on the ground.
 website: https://modrinth.com/mod/show-my-maps
 folia-supported: true
+permissions:
+  showmymaps.see:
+    description: Receive map colours for maps the player can see but is not carrying.
+    default: true

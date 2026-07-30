@@ -1,8 +1,11 @@
 package org.dx.showmymaps.paper;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -34,6 +37,13 @@ import org.bukkit.plugin.java.JavaPlugin;
  * what each player can currently see and sends those maps to them.
  */
 public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
+    /**
+     * Held by everyone unless an owner takes it away. A server that sells map art,
+     * or hides it behind a rank, revokes this and the previews stop: the colours are
+     * never sent, so there is nothing on the client to draw.
+     */
+    public static final String SEE_PERMISSION = "showmymaps.see";
+
     /** Map ids already sent to a player, and when, so the same 16 KB is not resent every pass. */
     private final Map<UUID, Map<Integer, Long>> sent = new HashMap<>();
 
@@ -43,6 +53,7 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     private boolean shulkerContents;
     private boolean nearbyItems;
     private int nearbyRadius;
+    private Set<String> disabledWorlds = Set.of();
 
     @Override
     public void onEnable() {
@@ -70,6 +81,15 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         shulkerContents = getConfig().getBoolean("shulker-contents", true);
         nearbyItems = getConfig().getBoolean("nearby-items", true);
         nearbyRadius = Math.max(1, getConfig().getInt("nearby-radius", 12));
+        disabledWorlds = getConfig().getStringList("disabled-worlds").stream()
+            .map(name -> name.toLowerCase(Locale.ROOT))
+            .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /** Whether this player is owed map colours at all. */
+    private boolean allowed(Player player) {
+        return player.hasPermission(SEE_PERMISSION)
+            && !disabledWorlds.contains(player.getWorld().getName().toLowerCase(Locale.ROOT));
     }
 
     private void schedule(Player player) {
@@ -90,7 +110,7 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     /** A GUI's first page is worth sending before the next scheduled pass. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onOpen(InventoryOpenEvent event) {
-        if (event.getPlayer() instanceof Player player) {
+        if (event.getPlayer() instanceof Player player && allowed(player)) {
             player.getScheduler().runDelayed(this, task -> sweep(player), null, 1L);
         }
     }
@@ -98,13 +118,13 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     /** Clicking a plugin GUI usually turns the page, which swaps every item in it. */
     @EventHandler(priority = EventPriority.MONITOR)
     public void onClick(InventoryClickEvent event) {
-        if (event.getWhoClicked() instanceof Player player) {
+        if (event.getWhoClicked() instanceof Player player && allowed(player)) {
             player.getScheduler().runDelayed(this, task -> sweep(player), null, 2L);
         }
     }
 
     private void sweep(Player player) {
-        if (!player.isOnline()) {
+        if (!player.isOnline() || !allowed(player)) {
             return;
         }
 

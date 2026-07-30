@@ -49,11 +49,17 @@ packet in the protocol; `ClientboundMapItemDataPacket` is one-way, so the server
 ## Paper plugin
 
 `paper-plugin/` is the server half for Paper, Spigot and their forks, which cannot load a Fabric
-mod. It sends map colours for maps in whatever inventory a player has open — chests, auction and
+mod. It is built against the oldest API in its range so one jar covers 1.21.1 through 26.2, and
+every one of those was booted with it before that was claimed. It sends map colours for maps in whatever inventory a player has open — chests, auction and
 shop pages, any plugin GUI — plus shulker box contents and maps lying nearby, which is the whole
 set vanilla leaves out. Build it with `./gradlew -p paper-plugin build` and drop the jar in
 `plugins/`. Settings live in `config.yml`; per-player schedulers keep it correct on Folia and
 ShreddedPaper.
+
+Owners decide who gets previews. Everyone holds `showmymaps.see` unless it is taken away, so a
+server selling map art can revoke it and grant it to a rank, or list worlds under
+`disabled-worlds`. A player without it is never sent the colours, so there is nothing on their
+client to draw: the switch is server side, not a client setting anyone can flip back.
 
 ### Trying it against a real server
 

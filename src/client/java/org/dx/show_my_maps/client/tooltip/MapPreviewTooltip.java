@@ -94,7 +94,17 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
             return;
         }
 
+        //? if <1.21.9 {
+        /*// The map goes through a buffer source that is flushed here and now, while
+        // the tooltip background is drawn later and higher up. Without lifting the
+        // picture above it, the tooltip comes out an empty box.
+        graphics.pose().pushPose();
+        graphics.pose().translate(0.0F, 0.0F, 500.0F);
         MapPreviewRenderer.draw(graphics, this.preview, this.mapId, data, x, y, size());
+        graphics.pose().popPose();
+        *///?} else {
+        MapPreviewRenderer.draw(graphics, this.preview, this.mapId, data, x, y, size());
+        //?}
     }
     //?}
 
