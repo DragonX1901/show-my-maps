@@ -19,30 +19,18 @@ real thing instead.
 
 ## What it does
 
-**Map icons.** The slot shows the art in place of the parchment sprite, so a page full of map art
-reads at a glance, with no hovering.
-
 <img src="docs/images/slot-icons.png" alt="Map art drawn as the item icon" width="820">
 
-**Tooltip preview.** Hover a map anywhere a tooltip appears — inventory, chest, hopper, creative
-menu, a shop GUI — and the picture renders under the normal lines.
-
-<img src="docs/images/tooltip.png" alt="Tooltip preview" width="820">
-
-**Maps you never carried.** A chest full of art reads as art, not as a row of identical
-parchment.
-
-<img src="docs/images/chest.png" alt="A map in a chest you never carried" width="820">
-
-**Dropped maps** spin as the art itself instead of a rolled parchment.
-
-<img src="docs/images/dropped.png" alt="Dropped maps show their art" width="820">
-
-**Shulker box tooltip.** Hover a box and its contents appear as a slot grid, maps included,
-replacing vanilla's list of item names. Steps aside automatically if you have
-[Shulker Box Tooltip](https://modrinth.com/mod/shulkerboxtooltip) installed.
-
-<img src="docs/images/shulker.png" alt="Works inside Shulker Box Tooltip too" width="820">
+* **Map icons** — the slot shows the art in place of the parchment sprite, so a page full of map
+  art reads at a glance, with no hovering.
+* **Tooltip preview** — hover a map anywhere a tooltip appears — inventory, chest, hopper,
+  creative menu, a shop GUI — and the picture renders under the normal lines.
+* **Maps you never carried** — a chest full of art reads as art, not as a row of identical
+  parchment.
+* **Dropped maps** spin as the art itself instead of a rolled parchment.
+* **Shulker box tooltip** — hover a box and its contents appear as a slot grid, maps included,
+  replacing vanilla's list of item names. Steps aside automatically if you have
+  [Shulker Box Tooltip](https://modrinth.com/mod/shulkerboxtooltip) installed.
 
 ---
 
@@ -70,8 +58,6 @@ Match the version your **client** runs, not the server's.
 
 Mod Menu opens the screen; the file is `config/show_my_maps.json`, written when the screen
 closes. Vanilla widgets only, so the mod carries no config library.
-
-<img src="docs/images/settings.png" alt="Settings, via Mod Menu" width="820">
 
 | Field | Default | Meaning |
 | --- | --- | --- |
