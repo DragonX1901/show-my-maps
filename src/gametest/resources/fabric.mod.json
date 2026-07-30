@@ -8,7 +8,6 @@
     "fabric-client-gametest": [
       "org.dx.show_my_maps.gametest.MapPreviewClientTest",
       "org.dx.show_my_maps.gametest.DropAndShulkerTest",
-      "org.dx.show_my_maps.gametest.MapShareTest",
       "org.dx.show_my_maps.gametest.LogoShotTest"
     ]
   },

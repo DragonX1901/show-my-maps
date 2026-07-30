@@ -59,7 +59,6 @@ public final class MapDataCache {
 
         dirty.clear();
         missing.clear();
-        MapShare.beginSession();
     }
 
     /** Which server's folder the cache is writing to, and the share service keys by. */
@@ -111,8 +110,6 @@ public final class MapDataCache {
         }
 
         if (missing.contains(mapId)) {
-            // Cheap and rate limited: it only leaves once the retry window is up.
-            MapShare.request(mapId);
             return null;
         }
 
@@ -124,7 +121,6 @@ public final class MapDataCache {
 
             if (sibling == null) {
                 missing.add(mapId);
-                MapShare.request(mapId);
                 return null;
             }
 
@@ -241,7 +237,6 @@ public final class MapDataCache {
                 data.write(saved.colors, 0, COLOUR_COUNT);
             }
 
-            MapShare.offer(mapId, file);
         } catch (IOException e) {
             Show_my_maps.LOGGER.warn("Could not write cached map {}", mapId, e);
         }
