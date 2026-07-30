@@ -1,0 +1,11 @@
+name = "show-my-maps-share"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+# Holds one object per shared map: <server>/<mapId>.bin, 16 KB each.
+[[r2_buckets]]
+binding = "MAPS"
+bucket_name = "show-my-maps-share"
+
+# Optional. Set it and clients must send the same value as X-Share-Token to upload:
+#   wrangler secret put SHARE_TOKEN

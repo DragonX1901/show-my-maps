@@ -37,6 +37,14 @@ public class ShowMyMapsConfig {
     public boolean cacheMapData = true;
     /** Say so on joining a server that does not run this mod and so cannot send every map. */
     public boolean serverNotice = true;
+    /** Trade cached map files with other players through the host below. Off until you set one. */
+    public boolean mapShare = false;
+    /** Also offer maps this client receives, so other players stop missing them. */
+    public boolean mapShareUpload = true;
+    /** Base URL of that service, for example https://maps.example.com/v1 */
+    public String mapShareUrl = "";
+    /** Sent as X-Share-Token when the service asks for one. */
+    public String mapShareToken = "";
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {
@@ -78,6 +86,14 @@ public class ShowMyMapsConfig {
     }
 
     private void clamp() {
+        if (this.mapShareUrl == null) {
+            this.mapShareUrl = "";
+        }
+
+        if (this.mapShareToken == null) {
+            this.mapShareToken = "";
+        }
+
         this.tooltipSize = Mth.clamp(this.tooltipSize, MIN_SIZE, MAX_SIZE);
         this.slotPreviewSize = Mth.clamp(this.slotPreviewSize, 8, 16);
     }

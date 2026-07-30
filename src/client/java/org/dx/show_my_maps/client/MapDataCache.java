@@ -57,6 +57,21 @@ public final class MapDataCache {
 
         dirty.clear();
         missing.clear();
+        MapShare.beginSession();
+    }
+
+    /** Which server's folder the cache is writing to, and the share service keys by. */
+    public static String serverKey() {
+        return serverKey;
+    }
+
+    public static Path cacheFile(MapId mapId) {
+        return fileFor(mapId);
+    }
+
+    /** Called once a file has appeared behind our back, so the next lookup rereads it. */
+    public static void forget(MapId mapId) {
+        missing.remove(mapId);
     }
 
     public static void markDirty(MapId mapId) {
@@ -89,7 +104,13 @@ public final class MapDataCache {
      * level, so vanilla lookups and any later patch packet work on it.
      */
     public static @Nullable MapItemSavedData restore(ClientLevel level, MapId mapId) {
-        if (!ShowMyMapsConfig.get().cacheMapData || missing.contains(mapId)) {
+        if (!ShowMyMapsConfig.get().cacheMapData) {
+            return null;
+        }
+
+        if (missing.contains(mapId)) {
+            // Cheap and rate limited: it only leaves once the retry window is up.
+            MapShare.request(mapId);
             return null;
         }
 
@@ -97,6 +118,7 @@ public final class MapDataCache {
 
         if (!Files.exists(file)) {
             missing.add(mapId);
+            MapShare.request(mapId);
             return null;
         }
 
@@ -144,6 +166,8 @@ public final class MapDataCache {
                 *///?}
                 data.write(saved.colors, 0, COLOUR_COUNT);
             }
+
+            MapShare.offer(mapId, file);
         } catch (IOException e) {
             Show_my_maps.LOGGER.warn("Could not write cached map {}", mapId, e);
         }

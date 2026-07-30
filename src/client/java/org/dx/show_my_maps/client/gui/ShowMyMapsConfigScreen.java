@@ -8,6 +8,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -64,8 +65,20 @@ public class ShowMyMapsConfigScreen extends Screen {
             .create(leftColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.server_notice"),
                 (button, value) -> config.serverNotice = value));
 
+        addRenderableWidget(CycleButton.onOffBuilder(config.mapShare)
+            .create(rightColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.map_share"),
+                (button, value) -> config.mapShare = value));
+
+        EditBox shareUrl = new EditBox(this.font, leftColumn, top + ROW_HEIGHT * 4, WIDGET_WIDTH, 20,
+            Component.translatable("option.show_my_maps.map_share_url"));
+        shareUrl.setMaxLength(256);
+        shareUrl.setHint(Component.translatable("option.show_my_maps.map_share_url"));
+        shareUrl.setValue(config.mapShareUrl);
+        shareUrl.setResponder(value -> config.mapShareUrl = value);
+        addRenderableWidget(shareUrl);
+
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 4 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 5 + 8, this.height - 28), WIDGET_WIDTH, 20)
             .build());
     }
 

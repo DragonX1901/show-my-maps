@@ -28,6 +28,10 @@ screen closes.
 | `containerTooltip` | `true` | Show shulker box contents as a slot grid |
 | `cacheMapData` | `true` | Keep received map colours on disk |
 | `serverNotice` | `true` | Say so on joining a server that does not run the mod |
+| `mapShare` | `false` | Fetch maps this client was never sent from a share host |
+| `mapShareUpload` | `true` | Offer maps this client *was* sent, once sharing is on |
+| `mapShareUrl` | `""` | Base URL of that host |
+| `mapShareToken` | `""` | Sent as `X-Share-Token` when the host asks for one |
 
 ## Map cache
 
@@ -39,6 +43,38 @@ in a shop or auction GUI that lists the same map later.
 
 This cannot conjure maps you have never been sent. There is no serverbound "send me map N"
 packet in the protocol; `ClientboundMapItemDataPacket` is one-way, so the server decides.
+
+## Map share
+
+The pixels of a map you have never carried are on the server's disk and nowhere else, and no
+packet asks for one. They are, however, on the disk of every player who *has* carried it or
+walked past it in a frame — as a 16 KB file in this mod's own cache. Sharing is off until you
+set `mapShareUrl`; then a preview that misses fetches
+`<url>/<server>/<mapId>.bin`, and a map the server does send is offered back with a `PUT`.
+
+`map-share-worker/` is a Cloudflare Worker that serves exactly that, backed by R2:
+
+```
+cd map-share-worker
+wrangler r2 bucket create show-my-maps-share
+wrangler secret put SHARE_TOKEN   # optional, then set mapShareToken to match
+wrangler deploy
+```
+
+Map ids mean different pictures on different servers, so the server key is part of the path and
+files never cross between them. First write wins, because otherwise anyone could replace a map
+with the wrong art; uploads are checked for the file's header and size before they are stored.
+This covers what somebody has seen. A map no player of this mod has ever been sent cannot appear,
+here or anywhere else.
+
+## Paper plugin
+
+`paper-plugin/` is the server half for Paper, Spigot and their forks, which cannot load a Fabric
+mod. It sends map colours for maps in whatever inventory a player has open — chests, auction and
+shop pages, any plugin GUI — plus shulker box contents and maps lying nearby, which is the whole
+set vanilla leaves out. Build it with `./gradlew -p paper-plugin build` and drop the jar in
+`plugins/`. Settings live in `config.yml`; per-player schedulers keep it correct on Folia and
+ShreddedPaper.
 
 ## Why there is a server side
 
