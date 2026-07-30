@@ -58,11 +58,13 @@ Install it on both sides — singleplayer and LAN cover this on their own.
 ### On a server that does not run the mod
 
 Most public servers are Paper or Spigot and cannot load a Fabric mod at all, so only the client
-half runs. Vanilla still sends colours for every map in your own inventory
-(`ServerPlayer.doTick` calls `synchronizeSpecialItemUpdates` on each inventory slot), so icons
-and tooltips work for maps you carry, and the cache keeps them working afterwards. Maps you have
-never carried — in a chest, inside a shulker box, lying on the ground, held by someone else —
-have no colours on the client and read *This server never sent this map*.
+half runs. Vanilla still sends colours in two cases: maps in your own inventory
+(`ServerPlayer.doTick` calls `synchronizeSpecialItemUpdates` on each inventory slot) and maps in
+an item frame you are near (`ServerEntity.sendChanges` pushes those to every tracking player). So
+icons and tooltips work for a map you carry or walk past on a wall, and the cache keeps them
+working afterwards. A map you have seen neither way — in a chest, inside a shulker box, lying on
+the ground, held by someone else — has no colours on the client and reads *This server never sent
+this map*.
 
 The client tells the two cases apart. The server side registers a `show_my_maps:presence`
 channel, so a second after joining the client knows whether the other end runs the mod, and says

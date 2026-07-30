@@ -9,5 +9,5 @@
   "option.show_my_maps.cache": "Remember maps",
   "option.show_my_maps.container_tooltip": "Box contents",
   "option.show_my_maps.server_notice": "Server warning",
-  "chat.show_my_maps.server_missing": "SHOW MY MAPS is not installed on this server, so it only sends maps you carry yourself. Maps in chests, in shulker boxes and on the ground stay blank until you have carried them once."
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS is not installed on this server, so it only sends maps you carry and maps in item frames you walk past. Maps in chests, in shulker boxes and on the ground stay blank until you have seen them one of those two ways."
 }
