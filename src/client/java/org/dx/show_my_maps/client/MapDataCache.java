@@ -7,9 +7,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Stream;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -117,9 +119,21 @@ public final class MapDataCache {
         Path file = fileFor(mapId);
 
         if (!Files.exists(file)) {
-            missing.add(mapId);
-            MapShare.request(mapId);
-            return null;
+            // A network answers to several addresses, and each one made its own folder.
+            Path sibling = sameNetwork(mapId);
+
+            if (sibling == null) {
+                missing.add(mapId);
+                MapShare.request(mapId);
+                return null;
+            }
+
+            try {
+                Files.createDirectories(file.getParent());
+                Files.copy(sibling, file);
+            } catch (IOException e) {
+                file = sibling;
+            }
         }
 
         try (InputStream in = Files.newInputStream(file); DataInputStream data = new DataInputStream(in)) {
@@ -147,6 +161,66 @@ public final class MapDataCache {
             missing.add(mapId);
             return null;
         }
+    }
+
+    /**
+     * The same server behind another hostname. A player joining through
+     * {@code play.example.com} today and {@code eu.example.com} tomorrow has one map
+     * cache split in two, and the maps in the other half are the same pictures.
+     * Registrable domain only: unrelated servers must not lend each other map ids.
+     */
+    private static @Nullable Path sameNetwork(MapId mapId) {
+        String domain = domainOf(serverKey);
+
+        if (domain == null || !Files.isDirectory(ROOT)) {
+            return null;
+        }
+
+        String name = "map_" + mapId.id() + ".bin";
+
+        try (Stream<Path> folders = Files.list(ROOT)) {
+            return folders
+                .filter(Files::isDirectory)
+                .filter(folder -> !folder.getFileName().toString().equals(serverKey))
+                .filter(folder -> domain.equals(domainOf(folder.getFileName().toString())))
+                .map(folder -> folder.resolve(name))
+                .filter(Files::exists)
+                .findFirst()
+                .orElse(null);
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
+     * The last two labels of a cache folder name, or null when there is nothing safe
+     * to group by: a bare address, a singleplayer world, an IP whose trailing octets
+     * say nothing about who owns it.
+     */
+    private static @Nullable String domainOf(String key) {
+        String host = key.replaceAll("_\\d+$", "");
+        String[] labels = host.split("\\.");
+
+        if (labels.length < 2) {
+            return null;
+        }
+
+        for (String label : labels) {
+            if (label.isEmpty()) {
+                return null;
+            }
+        }
+
+        // An IPv4 address shares octets with strangers, so never group on one.
+        if (labels.length == 4 && Arrays.stream(labels).allMatch(MapDataCache::isNumeric)) {
+            return null;
+        }
+
+        return labels[labels.length - 2] + "." + labels[labels.length - 1];
+    }
+
+    private static boolean isNumeric(String label) {
+        return label.chars().allMatch(Character::isDigit);
     }
 
     private static void write(MapId mapId, MapItemSavedData saved) {

@@ -41,6 +41,12 @@ dimension. Every map that arrives is written to `show_my_maps_cache/<server>/map
 seen once — carried, bought, or passed in an item frame — keeps previewing afterwards, including
 in a shop or auction GUI that lists the same map later.
 
+A network usually answers to several addresses, and the cache folder is named after the one you
+typed. Joining through `play.example.com` today and `eu.example.com` tomorrow would otherwise
+split one cache in two, so a map missing from the current folder is looked for in the folders of
+other addresses on the same registrable domain, and copied across when it turns up. Bare IPs are
+never grouped: unrelated servers must not lend each other map ids.
+
 This cannot conjure maps you have never been sent. There is no serverbound "send me map N"
 packet in the protocol; `ClientboundMapItemDataPacket` is one-way, so the server decides.
 
