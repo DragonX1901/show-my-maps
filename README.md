@@ -27,6 +27,7 @@ screen closes.
 | `tooltipSize` | `128` | Tooltip preview size in GUI pixels (32–256) |
 | `containerTooltip` | `true` | Show shulker box contents as a slot grid |
 | `cacheMapData` | `true` | Keep received map colours on disk |
+| `serverNotice` | `true` | Say so on joining a server that does not run the mod |
 
 ## Map cache
 
@@ -52,9 +53,22 @@ This mod fixes both on the server side:
 * `ContainerMapSync` pushes colours for maps in a chest you have open and for maps packed inside
   a shulker box you carry, painting them while you stand inside the mapped area.
 
-Install it on both sides — singleplayer and LAN cover this on their own. On a vanilla or Paper
-server without the mod, the client half still runs and previews any map the server already sent
-you; everything else reads *Map data not received yet*.
+Install it on both sides — singleplayer and LAN cover this on their own.
+
+### On a server that does not run the mod
+
+Most public servers are Paper or Spigot and cannot load a Fabric mod at all, so only the client
+half runs. Vanilla still sends colours for every map in your own inventory
+(`ServerPlayer.doTick` calls `synchronizeSpecialItemUpdates` on each inventory slot), so icons
+and tooltips work for maps you carry, and the cache keeps them working afterwards. Maps you have
+never carried — in a chest, inside a shulker box, lying on the ground, held by someone else —
+have no colours on the client and read *This server never sent this map*.
+
+The client tells the two cases apart. The server side registers a `show_my_maps:presence`
+channel, so a second after joining the client knows whether the other end runs the mod, and says
+once in chat when it does not. Turn that off with `serverNotice`. A proxy in front of the server
+(Velocity, BungeeCord) or a protocol bridge like ViaVersion changes nothing here: the check reads
+the channel list the backend itself advertises.
 
 | Field in `config/show_my_maps_server.json` | Default | Meaning |
 | --- | --- | --- |

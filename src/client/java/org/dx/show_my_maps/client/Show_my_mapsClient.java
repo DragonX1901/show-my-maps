@@ -33,12 +33,20 @@ public class Show_my_mapsClient implements ClientModInitializer {
             return data instanceof ContainerPreviewTooltipData contents ? new ContainerPreviewTooltip(contents.items()) : null;
         });
 
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, minecraft) -> MapDataCache.beginSession(minecraft));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, minecraft) -> MapDataCache.flush(minecraft.level));
-        ClientTickEvents.END_CLIENT_TICK.register(Show_my_mapsClient::flushCache);
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, minecraft) -> {
+            MapDataCache.beginSession(minecraft);
+            ServerSupport.beginSession();
+        });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, minecraft) -> {
+            MapDataCache.flush(minecraft.level);
+            ServerSupport.endSession();
+        });
+        ClientTickEvents.END_CLIENT_TICK.register(Show_my_mapsClient::tick);
     }
 
-    private static void flushCache(Minecraft minecraft) {
+    private static void tick(Minecraft minecraft) {
+        ServerSupport.tick(minecraft);
+
         if (minecraft.level != null && minecraft.level.getGameTime() % FLUSH_INTERVAL_TICKS == 0) {
             MapDataCache.flush(minecraft.level);
         }

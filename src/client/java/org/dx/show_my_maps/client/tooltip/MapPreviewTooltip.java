@@ -14,6 +14,7 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.dx.show_my_maps.client.MapDataAccess;
 import org.dx.show_my_maps.client.MapPreviewRenderer;
 import org.dx.show_my_maps.client.MapPreviewState;
+import org.dx.show_my_maps.client.ServerSupport;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,6 +24,8 @@ import org.jetbrains.annotations.Nullable;
  */
 public class MapPreviewTooltip implements ClientTooltipComponent {
     private static final Component NO_DATA = Component.translatable("tooltip.show_my_maps.no_data")
+        .withStyle(ChatFormatting.DARK_GRAY);
+    private static final Component NO_DATA_PLAIN_SERVER = Component.translatable("tooltip.show_my_maps.no_data_server")
         .withStyle(ChatFormatting.DARK_GRAY);
 
     private final MapId mapId;
@@ -34,7 +37,7 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
 
     @Override
     public int getWidth(Font font) {
-        return mapData() == null ? font.width(NO_DATA) : size();
+        return mapData() == null ? font.width(noData()) : size();
     }
 
     //? if >=1.21.9 {
@@ -76,7 +79,7 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
         MapItemSavedData data = mapData();
 
         if (data == null) {
-            graphics.text(font, NO_DATA, x, y, -1);
+            graphics.text(font, noData(), x, y, -1);
             return;
         }
 
@@ -87,13 +90,18 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
         MapItemSavedData data = mapData();
 
         if (data == null) {
-            graphics.drawString(font, NO_DATA, x, y, -1);
+            graphics.drawString(font, noData(), x, y, -1);
             return;
         }
 
         MapPreviewRenderer.draw(graphics, this.preview, this.mapId, data, x, y, size());
     }
     //?}
+
+    /** On a server without the mod the reason is worth naming: it will never arrive. */
+    private static Component noData() {
+        return ServerSupport.serverHasMod() ? NO_DATA : NO_DATA_PLAIN_SERVER;
+    }
 
     private @Nullable MapItemSavedData mapData() {
         return MapDataAccess.find(this.mapId);

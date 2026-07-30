@@ -1,10 +1,13 @@
 {
   "tooltip.show_my_maps.no_data": "Map data not received yet",
+  "tooltip.show_my_maps.no_data_server": "This server never sent this map",
   "screen.show_my_maps.config": "Show My Maps",
   "option.show_my_maps.slot_preview": "Map icons",
   "option.show_my_maps.slot_preview_size": "Icon size",
   "option.show_my_maps.tooltip": "Tooltip",
   "option.show_my_maps.tooltip_size": "Tooltip size",
   "option.show_my_maps.cache": "Remember maps",
-  "option.show_my_maps.container_tooltip": "Box contents"
+  "option.show_my_maps.container_tooltip": "Box contents",
+  "option.show_my_maps.server_notice": "Server warning",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS is not installed on this server, so it only sends maps you carry yourself. Maps in chests, in shulker boxes and on the ground stay blank until you have carried them once."
 }

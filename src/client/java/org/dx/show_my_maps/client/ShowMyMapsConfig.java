@@ -35,6 +35,8 @@ public class ShowMyMapsConfig {
     public boolean containerTooltip = true;
     /** Keep received map colours on disk, so maps you have seen once keep previewing. */
     public boolean cacheMapData = true;
+    /** Say so on joining a server that does not run this mod and so cannot send every map. */
+    public boolean serverNotice = true;
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {
