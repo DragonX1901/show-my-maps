@@ -26,3 +26,7 @@ versions/*/run/
 # Paper plugin build output
 paper-plugin/build/
 paper-plugin/.gradle/
+
+# Stub auction fixture build output
+paper-plugin/stub-auction/build/
+paper-plugin/stub-auction/.gradle/

@@ -29,6 +29,16 @@ base {
 loom {
     splitEnvironmentSourceSets()
 
+    // Joins a server outside this build on start up, for trying the mod against a
+    // real Paper server: ./gradlew :1.21.11:runClient -Ptest_server=127.0.0.1:25565
+    if (project.hasProperty("test_server")) {
+        runs {
+            client {
+                programArgs "--quickPlayMultiplayer", project.property("test_server").toString()
+            }
+        }
+    }
+
     mods {
         "show_my_maps" {
             sourceSet sourceSets.main
@@ -149,6 +159,8 @@ if (clientGameTests) {
         jvmArgs "-Dmax.bg.threads=4"
     }
 }
+
+
 
 tasks.matching { it.name in ["runClient", "runClientGameTest", "runServer"] }.configureEach {
     doFirst {

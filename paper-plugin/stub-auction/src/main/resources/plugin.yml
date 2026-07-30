@@ -1,0 +1,7 @@
+name: StubAuction
+version: '1.0.0'
+main: stub.StubAuction
+api-version: '1.21'
+commands:
+  stubah:
+    description: Opens a GUI holding a filled map

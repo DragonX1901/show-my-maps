@@ -76,6 +76,23 @@ set vanilla leaves out. Build it with `./gradlew -p paper-plugin build` and drop
 `plugins/`. Settings live in `config.yml`; per-player schedulers keep it correct on Folia and
 ShreddedPaper.
 
+### Trying it against a real server
+
+`paper-plugin/stub-auction/` is a fixture that stands in for the auction plugins a public
+network runs: it opens a GUI holding a filled map the player never carried, which is the case
+nothing sends colours for. Put it and a Paper server somewhere, then join with the mod:
+
+```
+./gradlew -p paper-plugin/stub-auction build     # the fake auction house
+./gradlew -p paper-plugin build                  # the real plugin
+./gradlew :1.21.11:runClient -Ptest_server=127.0.0.1:25565
+```
+
+The client joins on start up and the GUI opens itself, so nothing needs driving by hand. Without
+`ShowMyMaps-Paper` in `plugins/` the listing is a blank parchment and no file appears under
+`run/show_my_maps_cache/`; with it the art draws and the file is written. That pair is the whole
+claim, and it is worth rerunning rather than believing.
+
 ## Why there is a server side
 
 Map pixels live on the server, and vanilla is stingy with them twice over. It paints a map only
