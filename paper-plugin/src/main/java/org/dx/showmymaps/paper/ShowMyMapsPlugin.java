@@ -37,7 +37,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * never sent, so a client has nothing to draw however it renders maps. This walks
  * what each player can currently see and sends those maps to them.
  */
-public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
+public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     /**
      * Held by everyone unless an owner takes it away. A server that sells map art,
      * or hides it behind a rank, revokes this and the previews stop: the colours are

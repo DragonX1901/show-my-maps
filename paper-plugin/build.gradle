@@ -13,6 +13,18 @@ repositories {
 dependencies {
     // Built against the oldest API in the supported range, so one jar runs across it.
     compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+
+    // MockBukkit is built against a newer API than the jar targets, so tests get
+    // their own, newer paper-api version rather than the oldest-supported one.
+    testImplementation 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+    testImplementation 'org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.108.0'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 java {
