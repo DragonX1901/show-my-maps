@@ -1,0 +1,14 @@
+{
+  "tooltip.show_my_maps.no_data": "Harita verisi henüz alınmadı",
+  "tooltip.show_my_maps.no_data_server": "Bu sunucu bu haritayı hiç göndermedi",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Harita simgeleri",
+  "option.show_my_maps.slot_preview_size": "Simge boyutu",
+  "option.show_my_maps.tooltip": "İpucu",
+  "option.show_my_maps.tooltip_size": "İpucu boyutu",
+  "option.show_my_maps.cache": "Haritaları hatırla",
+  "option.show_my_maps.container_tooltip": "Kutu içeriği",
+  "option.show_my_maps.server_notice": "Sunucu uyarısı",
+  "chat.show_my_maps.server_outdated": "Bu sunucu kendi tarafında SHOW MY MAPS %s çalıştırıyor. Bu sürüm en az %s bekliyor, sunucuyu işletene güncellemesini söyle.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS bu sunucuya kurulu değil, ya da 1.0.3'ten eski olduğu için bunu söyleyemiyor; bu yüzden yalnızca taşıdığın haritaları ve yanından geçtiğin eşya çerçevelerindeki haritaları gönderiyor. Sandıklardaki, kabuklu kutulardaki ve yerdeki haritalar, bu iki yoldan birini yaşayana kadar boş kalır."
+}
