@@ -1,9 +1,7 @@
 name: Release
 
-# Tag a commit to publish, e.g. git tag v1.0.1 && git push origin v1.0.1
+# Manual only: tagging no longer auto-publishes. Run from the Actions tab.
 on:
-  push:
-    tags: ['v*']
   workflow_dispatch:
     inputs:
       version:
