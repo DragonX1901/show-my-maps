@@ -16,10 +16,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
@@ -154,8 +154,11 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         if (openContainers) {
             Inventory top = player.getOpenInventory().getTopInventory();
 
-            // The player's own crafting grid is the "top" inventory with nothing open.
-            if (!(top.getHolder() instanceof Player)) {
+            // With nothing else open, the "top" inventory is the player's own 2x2
+            // crafting grid. An ender chest's holder is the owning Player too, so
+            // that used to read as "nothing open" and skip it; check the inventory
+            // type instead, which tells the two apart correctly.
+            if (top.getType() != InventoryType.CRAFTING) {
                 sendAll(player, top.getContents());
             }
 
@@ -186,10 +189,13 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
 
     /** Maps packed inside a shulker box or a bundle, which nothing ever syncs. */
     private void sendNested(Player player, ItemStack holder) {
-        if (holder == null || !holder.hasItemMeta()) {
+        if (holder == null || holder.getType().isAir()) {
             return;
         }
 
+        // hasItemMeta() is false for a stack whose meta has nothing beyond the
+        // material's defaults, which is exactly the common case for a shulker box
+        // or bundle: get the meta unconditionally instead of gating on that flag.
         ItemMeta meta = holder.getItemMeta();
 
         if (meta instanceof BlockStateMeta blockState
@@ -206,11 +212,10 @@ public final class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     }
 
     private void send(Player player, ItemStack stack) {
-        if (stack == null || !stack.hasItemMeta() || !(stack.getItemMeta() instanceof MapMeta meta)) {
-            return;
-        }
-
-        if (!meta.hasMapView()) {
+        // hasItemMeta() is false for a plain filled map with nothing set beyond the
+        // map id itself, which is the common case, so it can't gate this: get the
+        // meta unconditionally and let the instanceof check decide.
+        if (stack == null || !(stack.getItemMeta() instanceof MapMeta meta) || !meta.hasMapView()) {
             return;
         }
 
