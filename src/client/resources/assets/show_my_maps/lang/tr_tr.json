@@ -11,6 +11,7 @@
   "option.show_my_maps.server_notice": "Sunucu uyarısı",
   "option.show_my_maps.harvest": "Önizleme bulundu bildirimi",
   "option.show_my_maps.harvest_debug": "Tanılama günlüğü",
+  "option.show_my_maps.strict": "Katı önizleme",
   "chat.show_my_maps.harvest": "Show My Maps: eksik olan %s harita önizlemesi dolduruldu — görmek için menüyü tekrar aç",
   "chat.show_my_maps.server_outdated": "Bu sunucu kendi tarafında SHOW MY MAPS %s çalıştırıyor. Bu sürüm en az %s bekliyor, sunucuyu işletene güncellemesini söyle.",
   "chat.show_my_maps.server_missing": "SHOW MY MAPS bu sunucuya kurulu değil, ya da 1.0.3'ten eski olduğu için bunu söyleyemiyor; bu yüzden yalnızca taşıdığın haritaları ve yanından geçtiğin eşya çerçevelerindeki haritaları gönderiyor. Sandıklardaki, kabuklu kutulardaki ve yerdeki haritalar, bu iki yoldan birini yaşayana kadar boş kalır."

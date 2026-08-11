@@ -109,7 +109,10 @@ public final class MapDataCache {
      * level, so vanilla lookups and any later patch packet work on it.
      */
     public static @Nullable MapItemSavedData restore(ClientLevel level, MapId mapId) {
-        if (!ShowMyMapsConfig.get().cacheMapData) {
+        if (!ShowMyMapsConfig.get().cacheMapData || ShowMyMapsConfig.get().strictPreviews) {
+            // Strict: show only what this server actually sent this session, never a
+            // cached guess. On a proxy network whose backends reuse map ids for
+            // different art, that is the difference between a blank and a wrong map.
             return null;
         }
 

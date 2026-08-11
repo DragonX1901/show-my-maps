@@ -35,6 +35,9 @@ public class ShowMyMapsConfig {
     public boolean containerTooltip = true;
     /** Keep received map colours on disk, so maps you have seen once keep previewing. */
     public boolean cacheMapData = true;
+    /** Show only maps this server actually sent, never a cached guess. Stops a proxy
+     * network whose backends reuse map ids from drawing the wrong picture. */
+    public boolean strictPreviews = false;
     /** Say so on joining a server that does not run this mod and so cannot send every map. */
     public boolean serverNotice = true;
     /** Say above the hotbar when maps a menu drew blank fill in, so you know to reopen it. */
