@@ -67,8 +67,12 @@ public class ShowMyMapsConfigScreen extends Screen {
             .create(rightColumn, top + ROW_HEIGHT * 3, columnWidth, 20, Component.translatable("option.show_my_maps.harvest"),
                 (button, value) -> config.harvestNotice = value));
 
+        addRenderableWidget(CycleButton.onOffBuilder(config.harvestDebug)
+            .create(leftColumn, top + ROW_HEIGHT * 4, columnWidth, 20, Component.translatable("option.show_my_maps.harvest_debug"),
+                (button, value) -> config.harvestDebug = value));
+
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 4 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 5 + 8, this.height - 28), WIDGET_WIDTH, 20)
             .build());
     }
 

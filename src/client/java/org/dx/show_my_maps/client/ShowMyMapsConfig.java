@@ -39,6 +39,8 @@ public class ShowMyMapsConfig {
     public boolean serverNotice = true;
     /** Say above the hotbar when maps a menu drew blank fill in, so you know to reopen it. */
     public boolean harvestNotice = true;
+    /** Log which menu maps have no colours yet and whether any arrive, for diagnosing a server. */
+    public boolean harvestDebug = false;
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {
