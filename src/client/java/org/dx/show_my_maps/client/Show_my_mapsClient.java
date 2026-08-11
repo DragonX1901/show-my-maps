@@ -39,10 +39,13 @@ public class Show_my_mapsClient implements ClientModInitializer {
             MapDataCache.beginSession(minecraft);
             MapHarvest.beginSession();
             ServerSupport.beginSession();
+            // After the cache, which is where the server key this reads comes from.
+            MapArtSource.beginSession();
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, minecraft) -> {
             MapDataCache.flush(minecraft.level);
             ServerSupport.endSession();
+            MapArtSource.endSession();
         });
         ClientTickEvents.END_CLIENT_TICK.register(Show_my_mapsClient::tick);
     }

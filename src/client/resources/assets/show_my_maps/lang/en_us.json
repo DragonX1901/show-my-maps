@@ -12,6 +12,11 @@
   "option.show_my_maps.harvest": "Preview found notice",
   "option.show_my_maps.harvest_debug": "Diagnostics log",
   "option.show_my_maps.strict": "Strict previews",
+  "option.show_my_maps.external_art": "Fetch missing art",
+  "option.show_my_maps.art_source": "Art source",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Join a server to set this",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: the art source for this server kept sending the wrong pictures, so it has been switched off and what it sent discarded.",
   "chat.show_my_maps.harvest": "Show My Maps: filled in %s map previews you were missing — reopen the menu to see them",
   "chat.show_my_maps.server_outdated": "This server runs SHOW MY MAPS %s on its side. %s or newer is what this version expects, so ask whoever runs it to update.",
   "chat.show_my_maps.server_missing": "SHOW MY MAPS is not installed on this server, or is older than 1.0.3 and cannot say so, so it only sends maps you carry and maps in item frames you walk past. Maps in chests, in shulker boxes and on the ground stay blank until you have seen them one of those two ways."

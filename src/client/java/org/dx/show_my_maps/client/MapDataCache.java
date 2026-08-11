@@ -7,9 +7,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import net.fabricmc.loader.api.FabricLoader;
@@ -34,12 +38,34 @@ import org.jetbrains.annotations.Nullable;
  * map you have seen once keeps previewing later.
  */
 public final class MapDataCache {
-    private static final int COLOUR_COUNT = 128 * 128;
-    private static final int FORMAT = 1;
+    public static final int COLOUR_COUNT = 128 * 128;
+
+    /**
+     * Version 1 held only what the server sent. Version 2 adds a trust byte, because
+     * a file can now also come from an art source the player pointed us at, and those
+     * two must never be confused: one is what this server said, the other is a guess
+     * from a stranger. A version 1 file predates art sources, so it is trusted.
+     */
+    private static final int FORMAT = 2;
+    private static final int FORMAT_V1 = 1;
+
+    /** Sent by this server, so it is the truth by definition. */
+    public static final byte FROM_SERVER = 0;
+    /** Fetched from an art source. Plausible, unverified until the server sends it too. */
+    public static final byte FROM_SOURCE = 1;
+
     private static final Path ROOT = FabricLoader.getInstance().getGameDir().resolve("show_my_maps_cache");
 
     private static final Set<MapId> dirty = new HashSet<>();
     private static final Set<MapId> missing = new HashSet<>();
+
+    /**
+     * The digest of every map whose colours came from an art source rather than this
+     * server, so that if the server ever does send that map the two can be compared.
+     * Survives a restart by way of the trust byte: a restored file lands here too.
+     */
+    private static final Map<Integer, byte[]> unverified = new HashMap<>();
+
     private static String serverKey = "unknown";
 
     private MapDataCache() {
@@ -59,9 +85,10 @@ public final class MapDataCache {
 
         dirty.clear();
         missing.clear();
+        unverified.clear();
     }
 
-    /** Which server's folder the cache is writing to, and the share service keys by. */
+    /** Which server's folder the cache is writing to, and art sources are keyed by. */
     public static String serverKey() {
         return serverKey;
     }
@@ -97,11 +124,38 @@ public final class MapDataCache {
             MapItemSavedData data = level.getMapData(mapId);
 
             if (data != null) {
-                write(mapId, data);
+                verify(mapId, data);
+                write(mapId, data, FROM_SERVER);
             }
         }
 
         dirty.clear();
+    }
+
+    /**
+     * The late check that makes an art source answerable. A source hands over colours
+     * nobody can confirm at the time; play on and the server often sends that same map
+     * for real - you buy the art, or walk the wall it hangs on. That is the moment the
+     * guess can be marked right or wrong.
+     *
+     * <p>The server's copy always wins regardless: it is about to be written over the
+     * fetched one. What this adds is telling {@link MapArtSource} which it was.
+     */
+    private static void verify(MapId mapId, MapItemSavedData truth) {
+        byte[] claimed = unverified.remove(mapId.id());
+
+        if (claimed == null) {
+            return;
+        }
+
+        if (Arrays.equals(claimed, digest(truth.colors))) {
+            MapArtSource.confirmed(mapId);
+        } else {
+            // Only a locked map is worth holding against the source. An unlocked one
+            // is still being redrawn as players explore, so the colours moving on is
+            // ordinary and says nothing about where they came from.
+            MapArtSource.disagreed(mapId, truth.locked);
+        }
     }
 
     /**
@@ -140,11 +194,16 @@ public final class MapDataCache {
         }
 
         try (InputStream in = Files.newInputStream(file); DataInputStream data = new DataInputStream(in)) {
-            if (data.readInt() != FORMAT) {
+            int format = data.readInt();
+
+            if (format != FORMAT && format != FORMAT_V1) {
                 missing.add(mapId);
                 return null;
             }
 
+            // Version 1 has no trust byte, and predates art sources: it can only be
+            // something this server sent us on an earlier visit.
+            byte trust = format == FORMAT ? data.readByte() : FROM_SERVER;
             byte scale = data.readByte();
             boolean locked = data.readBoolean();
             //? if >=1.21.9 {
@@ -154,6 +213,12 @@ public final class MapDataCache {
             *///?}
             byte[] colours = new byte[COLOUR_COUNT];
             data.readFully(colours);
+
+            if (trust == FROM_SOURCE) {
+                // Fetched on an earlier visit and still unconfirmed. Remember the
+                // digest so the check survives the restart that lost it.
+                unverified.put(mapId.id(), digest(colours));
+            }
 
             MapItemSavedData saved = MapItemSavedData.createForClient(scale, locked, dimension);
             System.arraycopy(colours, 0, saved.colors, 0, COLOUR_COUNT);
@@ -200,7 +265,7 @@ public final class MapDataCache {
      * to group by: a bare address, a singleplayer world, an IP whose trailing octets
      * say nothing about who owns it.
      */
-    private static @Nullable String domainOf(String key) {
+    static @Nullable String domainOf(String key) {
         String host = key.replaceAll("_\\d+$", "");
         String[] labels = host.split("\\.");
 
@@ -226,7 +291,34 @@ public final class MapDataCache {
         return label.chars().allMatch(Character::isDigit);
     }
 
-    private static void write(MapId mapId, MapItemSavedData saved) {
+    private static void write(MapId mapId, MapItemSavedData saved, byte trust) {
+        //? if >=1.21.9 {
+        String dimension = saved.dimension.identifier().toString();
+        //?} else {
+        /*String dimension = saved.dimension.location().toString();
+        *///?}
+        write(mapId, trust, saved.scale, saved.locked, dimension, saved.colors);
+    }
+
+    /**
+     * Colours from an art source. Written exactly where the server's own would have
+     * gone, so nothing on the drawing side needs to know the difference - only the
+     * trust byte records that this one is a guess.
+     *
+     * <p>Called off the render thread. It touches no client state beyond the file and
+     * the digest map, and the next {@link #restore} is what picks the result up.
+     */
+    public static void writeFromSource(MapId mapId, byte scale, boolean locked, String dimension, byte[] colours) {
+        if (colours.length != COLOUR_COUNT) {
+            throw new IllegalArgumentException("a map is " + COLOUR_COUNT + " colours, not " + colours.length);
+        }
+
+        write(mapId, FROM_SOURCE, scale, locked, dimension, colours);
+        unverified.put(mapId.id(), digest(colours));
+        forget(mapId);
+    }
+
+    private static void write(MapId mapId, byte trust, byte scale, boolean locked, String dimension, byte[] colours) {
         Path file = fileFor(mapId);
 
         try {
@@ -234,18 +326,40 @@ public final class MapDataCache {
 
             try (OutputStream out = Files.newOutputStream(file); DataOutputStream data = new DataOutputStream(out)) {
                 data.writeInt(FORMAT);
-                data.writeByte(saved.scale);
-                data.writeBoolean(saved.locked);
-                //? if >=1.21.9 {
-                data.writeUTF(saved.dimension.identifier().toString());
-                //?} else {
-                /*data.writeUTF(saved.dimension.location().toString());
-                *///?}
-                data.write(saved.colors, 0, COLOUR_COUNT);
+                data.writeByte(trust);
+                data.writeByte(scale);
+                data.writeBoolean(locked);
+                data.writeUTF(dimension);
+                data.write(colours, 0, COLOUR_COUNT);
             }
 
         } catch (IOException e) {
             Show_my_maps.LOGGER.warn("Could not write cached map {}", mapId, e);
+        }
+    }
+
+    /** Throws away every map fetched from an art source, for when one turns out to lie. */
+    public static void dropSourced() {
+        for (Integer id : Set.copyOf(unverified.keySet())) {
+            MapId mapId = new MapId(id);
+
+            try {
+                Files.deleteIfExists(fileFor(mapId));
+            } catch (IOException e) {
+                Show_my_maps.LOGGER.warn("Could not drop fetched map {}", mapId, e);
+            }
+
+            missing.add(mapId);
+        }
+
+        unverified.clear();
+    }
+
+    public static byte[] digest(byte[] colours) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(colours);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 is required of every Java runtime", e);
         }
     }
 

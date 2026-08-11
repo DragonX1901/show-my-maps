@@ -7,8 +7,9 @@ import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Single lookup for both previews: what the server has sent this session, falling
- * back to what we saw on an earlier one.
+ * Single lookup for every preview: what the server has sent this session, falling
+ * back to what we saw on an earlier one, and failing that asking whatever art source
+ * the player pointed at this server.
  */
 public final class MapDataAccess {
     private MapDataAccess() {
@@ -22,6 +23,19 @@ public final class MapDataAccess {
         }
 
         MapItemSavedData data = level.getMapData(mapId);
-        return data != null ? data : MapDataCache.restore(level, mapId);
+
+        if (data != null) {
+            return data;
+        }
+
+        data = MapDataCache.restore(level, mapId);
+
+        if (data == null) {
+            // Nothing anywhere. Ask the source, which answers on a later frame by
+            // writing the cache file this same call will find next time round.
+            MapArtSource.request(mapId);
+        }
+
+        return data;
     }
 }

@@ -8,10 +8,13 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.CycleButton;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.dx.show_my_maps.client.MapArtSource;
+import org.dx.show_my_maps.client.MapDataCache;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 import org.jetbrains.annotations.Nullable;
 
@@ -74,8 +77,37 @@ public class ShowMyMapsConfigScreen extends Screen {
             .create(rightColumn, top + ROW_HEIGHT * 4, columnWidth, 20, Component.translatable("option.show_my_maps.strict"),
                 (button, value) -> config.strictPreviews = value));
 
+        addRenderableWidget(CycleButton.onOffBuilder(config.externalArt)
+            .create(leftColumn, top + ROW_HEIGHT * 5, columnWidth, 20, Component.translatable("option.show_my_maps.external_art"),
+                (button, value) -> config.externalArt = value));
+
+        // The address belongs to one server, so it can only be set while on one.
+        // From the title screen there is nothing to key it by.
+        String server = this.minecraft != null && this.minecraft.level != null ? MapDataCache.serverKey() : null;
+        EditBox address = new EditBox(this.font, rightColumn, top + ROW_HEIGHT * 5, columnWidth, 20,
+            Component.translatable("option.show_my_maps.art_source"));
+        address.setMaxLength(512);
+        address.setHint(Component.translatable(server == null
+            ? "option.show_my_maps.art_source_offline"
+            : "option.show_my_maps.art_source_hint"));
+
+        if (server != null) {
+            address.setValue(config.artSources.getOrDefault(server, ""));
+            address.setResponder(value -> {
+                if (value.isBlank()) {
+                    config.artSources.remove(server);
+                } else {
+                    config.artSources.put(server, value.trim());
+                }
+            });
+        } else {
+            address.active = false;
+        }
+
+        addRenderableWidget(address);
+
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 5 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 6 + 8, this.height - 28), WIDGET_WIDTH, 20)
             .build());
     }
 
@@ -96,6 +128,12 @@ public class ShowMyMapsConfigScreen extends Screen {
     @Override
     public void onClose() {
         ShowMyMapsConfig.get().save();
+
+        if (this.minecraft != null && this.minecraft.level != null) {
+            // The address may have just changed, and a source switched off for lying
+            // deserves a fresh start once the player has been back here to look at it.
+            MapArtSource.beginSession();
+        }
 
         if (this.minecraft != null) {
             //? if >=26.2 {

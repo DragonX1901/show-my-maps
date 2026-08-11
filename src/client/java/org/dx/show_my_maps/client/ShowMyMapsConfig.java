@@ -7,9 +7,12 @@ import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Mth;
 import org.dx.show_my_maps.Show_my_maps;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Client-side settings, stored in {@code config/show_my_maps.json}.
@@ -44,6 +47,21 @@ public class ShowMyMapsConfig {
     public boolean harvestNotice = true;
     /** Log which menu maps have no colours yet and whether any arrive, for diagnosing a server. */
     public boolean harvestDebug = false;
+
+    /**
+     * Fetch the pictures this server never sends from an address you name below. Off,
+     * and useless without an address, because it makes the game talk to a host that
+     * is not the server: only turn it on for one you would visit yourself.
+     */
+    public boolean externalArt = false;
+
+    /**
+     * Where to fetch them from, per server. The key is the address you connect to, or
+     * the last two labels of it to cover a network answering to several names. The
+     * value is a folder to hang {@code <id>.bin} off, or a template containing
+     * {@code {id}}; {@code {server}} is filled in too.
+     */
+    public Map<String, String> artSources = new LinkedHashMap<>();
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {
@@ -84,8 +102,43 @@ public class ShowMyMapsConfig {
         }
     }
 
+    /**
+     * The art source for a server, by the same rule the cache groups folders by: the
+     * exact address first, then any entry sharing its registrable domain, so a network
+     * you reach through several hostnames only has to be configured once.
+     */
+    public @Nullable String artSourceFor(String serverKey) {
+        if (this.artSources.isEmpty()) {
+            return null;
+        }
+
+        String exact = this.artSources.get(serverKey);
+
+        if (exact != null && !exact.isBlank()) {
+            return exact;
+        }
+
+        String domain = MapDataCache.domainOf(serverKey);
+
+        if (domain == null) {
+            return null;
+        }
+
+        for (Map.Entry<String, String> entry : this.artSources.entrySet()) {
+            if (!entry.getValue().isBlank() && domain.equals(MapDataCache.domainOf(entry.getKey()))) {
+                return entry.getValue();
+            }
+        }
+
+        return null;
+    }
+
     private void clamp() {
         this.tooltipSize = Mth.clamp(this.tooltipSize, MIN_SIZE, MAX_SIZE);
         this.slotPreviewSize = Mth.clamp(this.slotPreviewSize, 8, 16);
+
+        if (this.artSources == null) {
+            this.artSources = new LinkedHashMap<>();
+        }
     }
 }
