@@ -14,7 +14,22 @@ shulker-contents: true
 
 # Maps lying on the ground near the player.
 nearby-items: true
+
+# Maps an entity is showing rather than holding: item frames, glow item frames,
+# armour stands and display entities. Shop fronts and art walls are usually built
+# from these, and nothing else on the server syncs them reliably.
+nearby-displays: true
+
 nearby-radius: 12
+
+# Maps offered in a villager or wandering trader's trade list. The offers are not in
+# the merchant's inventory, so without this a villager shop selling map art shows
+# nothing.
+merchant-trades: true
+
+# Log every map sent, and every stack naming a map this server cannot resolve. Turn
+# this on when previews stay blank and you want to know which of the two it is.
+debug: false
 
 # Worlds where nothing is sent, by name. A server that sells map art can leave the
 # shop world out, or turn previews off everywhere and grant them to a rank instead:

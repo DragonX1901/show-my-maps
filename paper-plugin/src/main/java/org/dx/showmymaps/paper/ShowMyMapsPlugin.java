@@ -8,8 +8,11 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.block.ShulkerBox;
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemDisplay;
+import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -17,10 +20,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.MerchantInventory;
+import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -55,12 +63,21 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     /** Map ids already sent to a player, and when, so the same 16 KB is not resent every pass. */
     private final Map<UUID, Map<Integer, Long>> sent = new HashMap<>();
 
+    /** A shulker inside a shulker is legal. A tower of them is somebody being clever. */
+    private static final int MAX_NESTING = 4;
+
+    /** How many ids one player's record may hold before stale ones are swept out. */
+    private static final int PRUNE_ABOVE = 512;
+
     private long scanIntervalTicks;
     private long resendMillis;
     private boolean openContainers;
     private boolean shulkerContents;
     private boolean nearbyItems;
+    private boolean nearbyDisplays;
+    private boolean merchantTrades;
     private int nearbyRadius;
+    private boolean debug;
     private Set<String> disabledWorlds = Set.of();
 
     @Override
@@ -90,7 +107,10 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         openContainers = getConfig().getBoolean("open-containers", true);
         shulkerContents = getConfig().getBoolean("shulker-contents", true);
         nearbyItems = getConfig().getBoolean("nearby-items", true);
+        nearbyDisplays = getConfig().getBoolean("nearby-displays", true);
+        merchantTrades = getConfig().getBoolean("merchant-trades", true);
         nearbyRadius = Math.max(1, getConfig().getInt("nearby-radius", 12));
+        debug = getConfig().getBoolean("debug", false);
         disabledWorlds = getConfig().getStringList("disabled-worlds").stream()
             .map(name -> name.toLowerCase(Locale.ROOT))
             .collect(Collectors.toUnmodifiableSet());
@@ -130,6 +150,34 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         sent.remove(event.getPlayer().getUniqueId());
     }
 
+    /**
+     * A client throws away every map it knows when its level is rebuilt, which is
+     * what a dimension change is. Remembering that we already sent those maps means
+     * not sending them again for a minute, and for that minute the player sees blank
+     * parchment for maps they were looking at seconds earlier. Forget and resend.
+     */
+    @EventHandler
+    public void onChangedWorld(PlayerChangedWorldEvent event) {
+        forget(event.getPlayer());
+    }
+
+    /** A respawn rebuilds the level the same way, so it loses the same maps. */
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+        forget(event.getPlayer());
+    }
+
+    private void forget(Player player) {
+        sent.remove(player.getUniqueId());
+
+        if (debug) {
+            getLogger().info("[debug] " + player.getName() + " changed level; resending on the next pass");
+        }
+
+        // Far enough after the switch that the client has its new level to put them in.
+        player.getScheduler().runDelayed(this, task -> sweep(player), null, 20L);
+    }
+
     /** A GUI's first page is worth sending before the next scheduled pass. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onOpen(InventoryOpenEvent event) {
@@ -162,20 +210,71 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
                 sendAll(player, top.getContents());
             }
 
+            // A merchant's trades are not in its inventory: the offers are their own
+            // list, drawn by the client from the trade packet. A villager shop that
+            // sells map art shows nothing without this.
+            if (merchantTrades && top instanceof MerchantInventory merchant) {
+                sendTrades(player, merchant);
+            }
+
             send(player, player.getOpenInventory().getCursor());
         }
 
         if (shulkerContents) {
             for (ItemStack stack : player.getInventory().getContents()) {
-                sendNested(player, stack);
+                sendNested(player, stack, 0);
             }
         }
 
-        if (nearbyItems) {
+        if (nearbyItems || nearbyDisplays) {
             for (Entity entity : player.getNearbyEntities(nearbyRadius, nearbyRadius, nearbyRadius)) {
-                if (entity instanceof Item item) {
-                    send(player, item.getItemStack());
+                sendCarriedBy(player, entity);
+            }
+        }
+    }
+
+    /**
+     * Maps an entity is showing rather than holding. Vanilla syncs a map in an item
+     * frame only as the frame enters tracking range, so a wall the player was already
+     * standing at, or one built while they watched, can leave gaps. Armour stands and
+     * display entities are never synced at all, and both are ordinary ways to build a
+     * shop front.
+     */
+    private void sendCarriedBy(Player player, Entity entity) {
+        if (nearbyItems && entity instanceof Item item) {
+            send(player, item.getItemStack());
+            return;
+        }
+
+        if (!nearbyDisplays) {
+            return;
+        }
+
+        if (entity instanceof ItemFrame frame) {
+            // Covers glow frames too, which are the same class.
+            send(player, frame.getItem());
+        } else if (entity instanceof ItemDisplay display) {
+            send(player, display.getItemStack());
+        } else if (entity instanceof ArmorStand stand) {
+            EntityEquipment equipment = stand.getEquipment();
+
+            if (equipment != null) {
+                for (ItemStack stack : equipment.getArmorContents()) {
+                    send(player, stack);
                 }
+
+                send(player, equipment.getItemInMainHand());
+                send(player, equipment.getItemInOffHand());
+            }
+        }
+    }
+
+    private void sendTrades(Player player, MerchantInventory merchant) {
+        for (MerchantRecipe recipe : merchant.getMerchant().getRecipes()) {
+            send(player, recipe.getResult());
+
+            for (ItemStack ingredient : recipe.getIngredients()) {
+                send(player, ingredient);
             }
         }
     }
@@ -183,13 +282,17 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     private void sendAll(Player player, ItemStack[] stacks) {
         for (ItemStack stack : stacks) {
             send(player, stack);
-            sendNested(player, stack);
+            sendNested(player, stack, 0);
         }
     }
 
-    /** Maps packed inside a shulker box or a bundle, which nothing ever syncs. */
-    private void sendNested(Player player, ItemStack holder) {
-        if (holder == null || holder.getType().isAir()) {
+    /**
+     * Maps packed inside a shulker box or a bundle, which nothing ever syncs. Recurses,
+     * because a bundle of maps inside a shulker box is a normal way to carry art and
+     * one level of unpacking used to stop at the box.
+     */
+    private void sendNested(Player player, ItemStack holder, int depth) {
+        if (holder == null || holder.getType().isAir() || depth >= MAX_NESTING) {
             return;
         }
 
@@ -203,10 +306,12 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             && blockState.getBlockState() instanceof ShulkerBox box) {
             for (ItemStack stack : box.getInventory().getContents()) {
                 send(player, stack);
+                sendNested(player, stack, depth + 1);
             }
         } else if (meta instanceof BundleMeta bundle && bundle.hasItems()) {
             for (ItemStack stack : bundle.getItems()) {
                 send(player, stack);
+                sendNested(player, stack, depth + 1);
             }
         }
     }
@@ -222,6 +327,14 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         MapView view = meta.getMapView();
 
         if (view == null) {
+            // The stack names a map this server has no data for. A plugin drawing its
+            // own maps straight to packets does this, and nothing here can help - but
+            // it is the one silent failure worth being able to see.
+            if (debug) {
+                getLogger().warning("[debug] a stack carries a map id this server cannot resolve;"
+                    + " whichever plugin made it is not backing it with map data");
+            }
+
             return;
         }
 
@@ -233,7 +346,17 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             return;
         }
 
+        // Without this the record grows for as long as a player stays connected, and
+        // on a shop server that is thousands of ids nobody will look at again.
+        if (seen.size() > PRUNE_ABOVE) {
+            seen.values().removeIf(when -> now - when >= resendMillis);
+        }
+
         seen.put(view.getId(), now);
         player.sendMap(view);
+
+        if (debug) {
+            getLogger().info("[debug] sent map " + view.getId() + " to " + player.getName());
+        }
     }
 }
