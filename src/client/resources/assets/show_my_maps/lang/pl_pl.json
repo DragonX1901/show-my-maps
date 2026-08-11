@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Dane mapy jeszcze nie odebrane",
+  "tooltip.show_my_maps.no_data_server": "Ten serwer nigdy nie wysłał tej mapy",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Ikony map",
+  "option.show_my_maps.slot_preview_size": "Rozmiar ikon",
+  "option.show_my_maps.tooltip": "Podpowiedź",
+  "option.show_my_maps.tooltip_size": "Rozmiar podpowiedzi",
+  "option.show_my_maps.cache": "Zapamiętuj mapy",
+  "option.show_my_maps.container_tooltip": "Zawartość pudełek",
+  "option.show_my_maps.server_notice": "Ostrzeżenie o serwerze",
+  "option.show_my_maps.harvest": "Powiadomienie o podglądzie",
+  "option.show_my_maps.harvest_debug": "Dziennik diagnostyczny",
+  "option.show_my_maps.strict": "Ścisłe podglądy",
+  "option.show_my_maps.external_art": "Pobieraj brakujące obrazy",
+  "option.show_my_maps.art_source": "Źródło obrazów",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Dołącz do serwera",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: źródło obrazów dla tego serwera wciąż wysyłało błędne obrazy, więc zostało wyłączone, a to, co przysłało, odrzucone.",
+  "chat.show_my_maps.harvest": "Show My Maps: uzupełniono %s brakujących podglądów map — otwórz menu ponownie, aby je zobaczyć",
+  "chat.show_my_maps.server_outdated": "Ten serwer używa SHOW MY MAPS %s. Ta wersja wymaga %s lub nowszej, więc poproś administratora o aktualizację.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS nie jest zainstalowany na tym serwerze albo jest starszy niż 1.0.3 i nie może tego zgłosić, więc wysyła tylko mapy, które trzymasz, oraz mapy w ramkach, obok których przechodzisz. Mapy w skrzyniach, w skrzyniach shulkera i na ziemi pozostają puste, dopóki nie zobaczysz ich w jeden z tych dwóch sposobów."
+}

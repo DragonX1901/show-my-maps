@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Данные карты ещё не получены",
+  "tooltip.show_my_maps.no_data_server": "Этот сервер никогда не присылал эту карту",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Значки карт",
+  "option.show_my_maps.slot_preview_size": "Размер значка",
+  "option.show_my_maps.tooltip": "Подсказка",
+  "option.show_my_maps.tooltip_size": "Размер подсказки",
+  "option.show_my_maps.cache": "Запоминать карты",
+  "option.show_my_maps.container_tooltip": "Содержимое ящиков",
+  "option.show_my_maps.server_notice": "Предупреждение о сервере",
+  "option.show_my_maps.harvest": "Уведомление о найденном превью",
+  "option.show_my_maps.harvest_debug": "Журнал диагностики",
+  "option.show_my_maps.strict": "Строгие превью",
+  "option.show_my_maps.external_art": "Загружать недостающие",
+  "option.show_my_maps.art_source": "Источник изображений",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Зайдите на сервер",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: источник изображений для этого сервера раз за разом присылал не те картинки, поэтому он отключён, а присланное удалено.",
+  "chat.show_my_maps.harvest": "Show My Maps: восполнено %s недостающих превью карт — откройте меню заново, чтобы их увидеть",
+  "chat.show_my_maps.server_outdated": "На этом сервере работает SHOW MY MAPS %s. Этой версии нужна %s или новее, так что попросите администратора обновить её.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS не установлен на этом сервере или старше 1.0.3 и не может об этом сообщить, поэтому присылаются только карты у вас в руках и карты в рамках, мимо которых вы проходите. Карты в сундуках, в шалкерах и на земле останутся пустыми, пока вы не увидите их одним из этих двух способов."
+}

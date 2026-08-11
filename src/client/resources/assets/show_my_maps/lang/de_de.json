@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Kartendaten noch nicht empfangen",
+  "tooltip.show_my_maps.no_data_server": "Dieser Server hat diese Karte nie gesendet",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Kartensymbole",
+  "option.show_my_maps.slot_preview_size": "Symbolgröße",
+  "option.show_my_maps.tooltip": "Tooltip",
+  "option.show_my_maps.tooltip_size": "Tooltip-Größe",
+  "option.show_my_maps.cache": "Karten merken",
+  "option.show_my_maps.container_tooltip": "Kisteninhalt",
+  "option.show_my_maps.server_notice": "Serverwarnung",
+  "option.show_my_maps.harvest": "Hinweis bei gefundener Vorschau",
+  "option.show_my_maps.harvest_debug": "Diagnoseprotokoll",
+  "option.show_my_maps.strict": "Strikte Vorschau",
+  "option.show_my_maps.external_art": "Fehlende Bilder laden",
+  "option.show_my_maps.art_source": "Bildquelle",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Tritt einem Server bei",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: Die Bildquelle für diesen Server hat wiederholt falsche Bilder geliefert und wurde daher abgeschaltet; das Empfangene wurde verworfen.",
+  "chat.show_my_maps.harvest": "Show My Maps: %s fehlende Kartenvorschauen wurden ergänzt — öffne das Menü erneut, um sie zu sehen",
+  "chat.show_my_maps.server_outdated": "Auf diesem Server läuft SHOW MY MAPS %s. Diese Version erwartet mindestens %s, bitte also den Betreiber um ein Update.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS ist auf diesem Server nicht installiert oder älter als 1.0.3 und kann sich nicht melden. Daher werden nur Karten gesendet, die du trägst, und Karten in Rahmen, an denen du vorbeigehst. Karten in Kisten, in Shulker-Kisten und auf dem Boden bleiben leer, bis du sie auf einem dieser beiden Wege gesehen hast."
+}

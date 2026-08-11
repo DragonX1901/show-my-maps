@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "지도 데이터를 아직 받지 못했습니다",
+  "tooltip.show_my_maps.no_data_server": "이 서버는 이 지도를 보낸 적이 없습니다",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "지도 아이콘",
+  "option.show_my_maps.slot_preview_size": "아이콘 크기",
+  "option.show_my_maps.tooltip": "툴팁",
+  "option.show_my_maps.tooltip_size": "툴팁 크기",
+  "option.show_my_maps.cache": "지도 기억하기",
+  "option.show_my_maps.container_tooltip": "상자 내용물",
+  "option.show_my_maps.server_notice": "서버 경고",
+  "option.show_my_maps.harvest": "미리보기 발견 알림",
+  "option.show_my_maps.harvest_debug": "진단 로그",
+  "option.show_my_maps.strict": "엄격한 미리보기",
+  "option.show_my_maps.external_art": "누락된 그림 가져오기",
+  "option.show_my_maps.art_source": "그림 출처",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "서버에 접속하세요",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: 이 서버의 그림 출처가 계속 잘못된 그림을 보내 비활성화했으며, 받은 내용은 폐기했습니다.",
+  "chat.show_my_maps.harvest": "Show My Maps: 누락된 지도 미리보기 %s개를 채웠습니다 — 메뉴를 다시 열면 보입니다",
+  "chat.show_my_maps.server_outdated": "이 서버는 SHOW MY MAPS %s을(를) 사용합니다. 이 버전은 %s 이상이 필요하니 운영자에게 업데이트를 요청하세요.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS가 이 서버에 설치되어 있지 않거나 1.0.3보다 오래되어 알릴 수 없습니다. 따라서 손에 든 지도와 가까이 지나간 액자의 지도만 전송됩니다. 상자, 셜커 상자, 바닥에 있는 지도는 그 두 가지 방법 중 하나로 보기 전까지 비어 있습니다."
+}

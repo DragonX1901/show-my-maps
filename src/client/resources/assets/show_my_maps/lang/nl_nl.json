@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Kaartgegevens nog niet ontvangen",
+  "tooltip.show_my_maps.no_data_server": "Deze server heeft deze kaart nooit verstuurd",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Kaartpictogrammen",
+  "option.show_my_maps.slot_preview_size": "Pictogramgrootte",
+  "option.show_my_maps.tooltip": "Tooltip",
+  "option.show_my_maps.tooltip_size": "Tooltipgrootte",
+  "option.show_my_maps.cache": "Kaarten onthouden",
+  "option.show_my_maps.container_tooltip": "Inhoud van dozen",
+  "option.show_my_maps.server_notice": "Serverwaarschuwing",
+  "option.show_my_maps.harvest": "Melding bij gevonden voorbeeld",
+  "option.show_my_maps.harvest_debug": "Diagnoselogboek",
+  "option.show_my_maps.strict": "Strikte voorbeelden",
+  "option.show_my_maps.external_art": "Ontbrekende afbeeldingen ophalen",
+  "option.show_my_maps.art_source": "Afbeeldingsbron",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Ga eerst naar een server",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: de afbeeldingsbron voor deze server bleef verkeerde afbeeldingen sturen, dus is die uitgeschakeld en is het ontvangene weggegooid.",
+  "chat.show_my_maps.harvest": "Show My Maps: %s ontbrekende kaartvoorbeelden aangevuld — open het menu opnieuw om ze te zien",
+  "chat.show_my_maps.server_outdated": "Deze server draait SHOW MY MAPS %s. Deze versie verwacht %s of nieuwer, dus vraag de beheerder om bij te werken.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS is niet op deze server geïnstalleerd, of is ouder dan 1.0.3 en kan dat niet melden, dus stuurt hij alleen kaarten die je draagt en kaarten in lijsten waar je langsloopt. Kaarten in kisten, in shulkerdozen en op de grond blijven leeg totdat je ze op een van die twee manieren hebt gezien."
+}

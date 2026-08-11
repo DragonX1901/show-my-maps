@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Dati della mappa non ancora ricevuti",
+  "tooltip.show_my_maps.no_data_server": "Questo server non ha mai inviato questa mappa",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Icone delle mappe",
+  "option.show_my_maps.slot_preview_size": "Dimensione icone",
+  "option.show_my_maps.tooltip": "Tooltip",
+  "option.show_my_maps.tooltip_size": "Dimensione tooltip",
+  "option.show_my_maps.cache": "Ricorda le mappe",
+  "option.show_my_maps.container_tooltip": "Contenuto della scatola",
+  "option.show_my_maps.server_notice": "Avviso del server",
+  "option.show_my_maps.harvest": "Avviso anteprima trovata",
+  "option.show_my_maps.harvest_debug": "Registro diagnostico",
+  "option.show_my_maps.strict": "Anteprime rigorose",
+  "option.show_my_maps.external_art": "Scarica immagini mancanti",
+  "option.show_my_maps.art_source": "Fonte immagini",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Entra in un server",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: la fonte immagini di questo server ha continuato a inviare immagini sbagliate, quindi è stata disattivata e quanto ricevuto è stato scartato.",
+  "chat.show_my_maps.harvest": "Show My Maps: completate %s anteprime di mappe mancanti — riapri il menu per vederle",
+  "chat.show_my_maps.server_outdated": "Questo server usa SHOW MY MAPS %s. Questa versione richiede almeno %s, quindi chiedi a chi lo gestisce di aggiornarlo.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS non è installato su questo server, o è precedente alla 1.0.3 e non può dirlo, quindi invia solo le mappe che porti con te e quelle nei quadri a cui ti avvicini. Le mappe nei bauli, nelle shulker box e a terra restano vuote finché non le hai viste in uno di questi due modi."
+}

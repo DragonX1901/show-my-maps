@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "尚未收到地圖資料",
+  "tooltip.show_my_maps.no_data_server": "此伺服器從未傳送過這張地圖",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "地圖圖示",
+  "option.show_my_maps.slot_preview_size": "圖示大小",
+  "option.show_my_maps.tooltip": "提示框",
+  "option.show_my_maps.tooltip_size": "提示框大小",
+  "option.show_my_maps.cache": "記住地圖",
+  "option.show_my_maps.container_tooltip": "盒子內容",
+  "option.show_my_maps.server_notice": "伺服器提醒",
+  "option.show_my_maps.harvest": "預覽補齊提醒",
+  "option.show_my_maps.harvest_debug": "診斷紀錄",
+  "option.show_my_maps.strict": "嚴格預覽",
+  "option.show_my_maps.external_art": "取得缺少的圖像",
+  "option.show_my_maps.art_source": "圖像來源",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "請先加入伺服器",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps：此伺服器的圖像來源多次傳送錯誤的圖片，已將其關閉並丟棄收到的內容。",
+  "chat.show_my_maps.harvest": "Show My Maps：已補齊 %s 張缺少的地圖預覽 —— 重新開啟選單即可看到",
+  "chat.show_my_maps.server_outdated": "此伺服器執行的是 SHOW MY MAPS %s。此版本需要 %s 或更新版本，請聯絡伺服器管理員更新。",
+  "chat.show_my_maps.server_missing": "此伺服器未安裝 SHOW MY MAPS，或版本早於 1.0.3 而無法告知，因此只會傳送你攜帶的地圖以及你走近的展示框中的地圖。箱子裡、界伏盒裡和地上的地圖會一直是空白，直到你以這兩種方式之一見過它們。"
+}

@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Dados do mapa ainda não recebidos",
+  "tooltip.show_my_maps.no_data_server": "Este servidor nunca enviou este mapa",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Ícones de mapa",
+  "option.show_my_maps.slot_preview_size": "Tamanho do ícone",
+  "option.show_my_maps.tooltip": "Tooltip",
+  "option.show_my_maps.tooltip_size": "Tamanho do tooltip",
+  "option.show_my_maps.cache": "Lembrar mapas",
+  "option.show_my_maps.container_tooltip": "Conteúdo da caixa",
+  "option.show_my_maps.server_notice": "Aviso do servidor",
+  "option.show_my_maps.harvest": "Aviso de prévia encontrada",
+  "option.show_my_maps.harvest_debug": "Registro de diagnóstico",
+  "option.show_my_maps.strict": "Prévias estritas",
+  "option.show_my_maps.external_art": "Buscar arte ausente",
+  "option.show_my_maps.art_source": "Fonte de arte",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Entre em um servidor",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: a fonte de arte deste servidor continuou enviando imagens erradas, então foi desativada e o que ela enviou foi descartado.",
+  "chat.show_my_maps.harvest": "Show My Maps: %s prévias de mapas que faltavam foram preenchidas — reabra o menu para vê-las",
+  "chat.show_my_maps.server_outdated": "Este servidor executa SHOW MY MAPS %s. Esta versão espera %s ou mais recente, então peça a quem o administra para atualizar.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS não está instalado neste servidor, ou é anterior à 1.0.3 e não consegue avisar, então ele só envia os mapas que você carrega e os mapas em molduras por onde você passa. Mapas em baús, em caixas de shulker e no chão continuam em branco até você tê-los visto de uma dessas duas formas."
+}

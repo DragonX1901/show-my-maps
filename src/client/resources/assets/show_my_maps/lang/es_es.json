@@ -1,0 +1,23 @@
+{
+  "tooltip.show_my_maps.no_data": "Datos del mapa aún no recibidos",
+  "tooltip.show_my_maps.no_data_server": "Este servidor nunca envió este mapa",
+  "screen.show_my_maps.config": "Show My Maps",
+  "option.show_my_maps.slot_preview": "Iconos de mapa",
+  "option.show_my_maps.slot_preview_size": "Tamaño del icono",
+  "option.show_my_maps.tooltip": "Tooltip",
+  "option.show_my_maps.tooltip_size": "Tamaño del tooltip",
+  "option.show_my_maps.cache": "Recordar mapas",
+  "option.show_my_maps.container_tooltip": "Contenido de la caja",
+  "option.show_my_maps.server_notice": "Aviso del servidor",
+  "option.show_my_maps.harvest": "Aviso de vista previa encontrada",
+  "option.show_my_maps.harvest_debug": "Registro de diagnóstico",
+  "option.show_my_maps.strict": "Vistas previas estrictas",
+  "option.show_my_maps.external_art": "Descargar arte faltante",
+  "option.show_my_maps.art_source": "Fuente de arte",
+  "option.show_my_maps.art_source_hint": "https://example.com/maps",
+  "option.show_my_maps.art_source_offline": "Únete a un servidor",
+  "chat.show_my_maps.art_source_wrong": "Show My Maps: la fuente de arte de este servidor siguió enviando imágenes incorrectas, así que se ha desactivado y se ha descartado lo recibido.",
+  "chat.show_my_maps.harvest": "Show My Maps: se completaron %s vistas previas de mapas que faltaban — vuelve a abrir el menú para verlas",
+  "chat.show_my_maps.server_outdated": "Este servidor ejecuta SHOW MY MAPS %s. Esta versión espera %s o posterior, así que pide a quien lo administra que lo actualice.",
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS no está instalado en este servidor, o es anterior a 1.0.3 y no puede indicarlo, así que solo envía los mapas que llevas y los mapas en marcos junto a los que pasas. Los mapas en cofres, en cajas de shulker y en el suelo permanecen en blanco hasta que los hayas visto de una de esas dos formas."
+}
