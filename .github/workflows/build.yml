@@ -55,6 +55,26 @@ jobs:
           name: jar-paper-plugin
           path: paper-plugin/build/libs/*.jar
 
+  map-export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build and test the map exporter
+        run: ./gradlew -p map-export build --stacktrace
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: jar-map-export
+          path: map-export/build/libs/*.jar
+
   gametest:
     runs-on: ubuntu-latest
     steps:
