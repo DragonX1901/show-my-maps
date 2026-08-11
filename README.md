@@ -55,7 +55,34 @@ half is missing.
 | --- | --- |
 | Singleplayer or LAN | everything — you are running both halves |
 | A server running a server half | everything |
+| A server whose maps are published (see below) | everything published |
 | Any other server | maps you have carried or walked past in a frame, plus anything cached from those |
+
+---
+
+## Art sources: no server half at all
+
+A server half is not the only place those pixels can come from. They are also sitting in the
+server's own `world/data/map_*.dat`, and an owner who publishes that folder gives every player a
+place to read them from — **without installing anything or restarting**.
+
+Read [map-export](map-export) for the tool that does the publishing. It takes a world folder or a
+backup zip and writes `<id>.bin` plus a `manifest.json`; copy that to any static host over HTTPS.
+
+On the client, turn on **Fetch missing art** and put the address in **Art source**. It is set per
+server, off by default, and only asked for maps that would otherwise draw blank. A folder is
+enough; a template with `{id}` in it works too if your host wants a different layout. Three
+shapes are read: the mod's own `.bin`, a bare 16384-byte colour array, and a 128×128 PNG.
+
+Two things worth being straight about:
+
+- **This is not verification.** Colours off a web host are a stranger's word for what a map looks
+  like, so they are stored marked as a guess, and **Strict previews** refuses them outright. If
+  the server later sends that map for real, the two are compared; a source that gets locked maps
+  wrong three times is switched off and everything it sent is thrown away.
+- **It makes your game talk to a host that is not the server.** Only point it at one you would
+  visit yourself. HTTPS is required unless the address is your own machine, redirects are refused,
+  and an address pointing into your private network is refused.
 
 ---
 
@@ -70,9 +97,19 @@ and drop it in `plugins/` instead — it sends map colours for maps in whatever 
 has open, chests and auction pages included, plus shulker box contents and maps lying nearby. One
 jar covers 1.21.1 through 26.2. Keep the Fabric mod on your client.
 
+It also covers the places maps hide that are not inventories at all: item frames and glow frames
+(`nearby-displays`), armour stands and display entities, and a villager or wandering trader's
+trade offers (`merchant-trades`), which are not in the merchant's inventory and so are invisible
+to anything that only walks containers.
+
 Owners decide who gets previews: everyone holds `showmymaps.see` unless you take it away, and
 `disabled-worlds` turns whole worlds off by name. A player without it is never *sent* the
 colours, so there is nothing on their client to reveal.
+
+If previews stay blank, set `debug: true`. It logs every map sent, and every stack naming a map
+the server cannot resolve — which separates "the plugin is not looking there" from "another
+plugin drew that map straight to packets and there is no map data behind it", the one case
+nothing on either side can fix.
 
 Either half announces itself and its version on joining, so the mod can tell "this server sends
 nothing" apart from "this server is behind", and say which. Update both halves together.
@@ -83,7 +120,8 @@ nothing" apart from "this server is behind", and say which. Update both halves t
 
 Every map you receive is saved to disk per server, so art you have seen once keeps previewing
 later — across relogs, dimension changes, and the other addresses the same network answers to.
-It cannot conjure maps you have never been sent. Nothing can.
+It cannot conjure maps you have never been sent; only a server half or a published art source
+can supply those.
 
 ---
 
