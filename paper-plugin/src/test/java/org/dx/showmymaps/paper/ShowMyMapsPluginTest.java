@@ -3,6 +3,7 @@ package org.dx.showmymaps.paper;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -102,6 +103,63 @@ class ShowMyMapsPluginTest {
         send(player, stack);
 
         verify(player).sendMap(view);
+    }
+
+    @Test
+    void twoPlayersEachGetMapsOnlyForTheirOwnOpenContainer() throws Exception {
+        World world = server.addSimpleWorld("world");
+        MapView view = server.createMap(world);
+        ItemStack mapStack = new ItemStack(Material.FILLED_MAP);
+        MapMeta meta = (MapMeta) mapStack.getItemMeta();
+        meta.setMapView(view);
+        mapStack.setItemMeta(meta);
+
+        // One chest, one map neither player owns, exactly the auction-listing case.
+        Inventory chest = mock(Inventory.class);
+        when(chest.getType()).thenReturn(InventoryType.CHEST);
+        when(chest.getContents()).thenReturn(new ItemStack[] {mapStack});
+
+        Player alice = viewer(world);
+        Player bob = viewer(world);
+
+        // Alice has the chest open; Bob has nothing but his own crafting grid.
+        open(alice, chest);
+        Inventory bobCrafting = mock(Inventory.class);
+        when(bobCrafting.getType()).thenReturn(InventoryType.CRAFTING);
+        open(bob, bobCrafting);
+
+        sweep(alice);
+        sweep(bob);
+
+        // The map goes to the one looking at it, and to no one else.
+        verify(alice).sendMap(view);
+        verify(bob, never()).sendMap(any());
+
+        // Bob opens the same chest: now he is owed it too, independently of Alice.
+        open(bob, chest);
+        sweep(bob);
+
+        verify(bob).sendMap(view);
+    }
+
+    /** A player who is allowed map colours and carries nothing of their own. */
+    private Player viewer(World world) {
+        Player player = mock(Player.class);
+        when(player.isOnline()).thenReturn(true);
+        when(player.hasPermission(ShowMyMapsPlugin.SEE_PERMISSION)).thenReturn(true);
+        when(player.getUniqueId()).thenReturn(UUID.randomUUID());
+        when(player.getWorld()).thenReturn(world);
+        PlayerInventory inventory = mock(PlayerInventory.class);
+        when(inventory.getContents()).thenReturn(new ItemStack[0]);
+        when(player.getInventory()).thenReturn(inventory);
+        when(player.getNearbyEntities(anyDouble(), anyDouble(), anyDouble())).thenReturn(List.of());
+        return player;
+    }
+
+    private void open(Player player, Inventory top) {
+        InventoryView openView = mock(InventoryView.class);
+        when(openView.getTopInventory()).thenReturn(top);
+        when(player.getOpenInventory()).thenReturn(openView);
     }
 
     private void sweep(Player player) throws ReflectiveOperationException {
