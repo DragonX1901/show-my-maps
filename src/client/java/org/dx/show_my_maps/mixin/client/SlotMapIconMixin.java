@@ -13,6 +13,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.dx.show_my_maps.client.MapDataAccess;
+import org.dx.show_my_maps.client.MapHarvest;
 import org.dx.show_my_maps.client.MapPreviewRenderer;
 import org.dx.show_my_maps.client.MapPreviewState;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
@@ -63,6 +64,9 @@ public class SlotMapIconMixin {
         MapItemSavedData data = MapDataAccess.find(mapId);
 
         if (data == null) {
+            // Blank in this menu: no colours yet. Remember it, so if you later walk
+            // past the frame that holds it, the mod can say the menu will fill in.
+            MapHarvest.want(mapId);
             return;
         }
 

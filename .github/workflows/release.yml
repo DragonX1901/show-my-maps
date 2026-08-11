@@ -7,6 +7,14 @@ on:
       version:
         description: Version number, without the leading v
         required: true
+      channel:
+        description: Release channel
+        type: choice
+        default: release
+        options:
+          - release
+          - beta
+          - alpha
 
 permissions:
   contents: write
@@ -58,7 +66,7 @@ jobs:
           files: versions/${{ matrix.version }}/build/libs/!(*-sources).jar
           name: ${{ steps.version.outputs.number }} for ${{ matrix.version }}
           version: ${{ steps.version.outputs.number }}+${{ matrix.version }}
-          version-type: release
+          version-type: ${{ inputs.channel || 'release' }}
           loaders: fabric
           game-versions: ${{ matrix.game-versions }}
           dependencies: |

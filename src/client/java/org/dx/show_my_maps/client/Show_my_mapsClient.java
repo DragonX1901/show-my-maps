@@ -37,6 +37,7 @@ public class Show_my_mapsClient implements ClientModInitializer {
 
         ClientPlayConnectionEvents.JOIN.register((handler, sender, minecraft) -> {
             MapDataCache.beginSession(minecraft);
+            MapHarvest.beginSession();
             ServerSupport.beginSession();
         });
         ClientPlayConnectionEvents.DISCONNECT.register((handler, minecraft) -> {
@@ -48,6 +49,7 @@ public class Show_my_mapsClient implements ClientModInitializer {
 
     private static void tick(Minecraft minecraft) {
         ServerSupport.tick(minecraft);
+        MapHarvest.tick(minecraft);
 
         if (minecraft.level != null && minecraft.level.getGameTime() % FLUSH_INTERVAL_TICKS == 0) {
             MapDataCache.flush(minecraft.level);

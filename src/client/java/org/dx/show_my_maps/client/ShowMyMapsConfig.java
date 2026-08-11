@@ -37,6 +37,8 @@ public class ShowMyMapsConfig {
     public boolean cacheMapData = true;
     /** Say so on joining a server that does not run this mod and so cannot send every map. */
     public boolean serverNotice = true;
+    /** Say above the hotbar when maps a menu drew blank fill in, so you know to reopen it. */
+    public boolean harvestNotice = true;
 
     public static ShowMyMapsConfig get() {
         if (instance == null) {

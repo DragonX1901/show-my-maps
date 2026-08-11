@@ -80,6 +80,10 @@ public final class MapDataCache {
             dirty.add(mapId);
             missing.remove(mapId);
         }
+
+        // Every received map passes through here, whatever sent it, so this is the
+        // one place to tell the heads-up a map a menu was missing has now arrived.
+        MapHarvest.captured(mapId);
     }
 
     /** Writes everything received since the last flush. */
