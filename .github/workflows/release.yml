@@ -72,3 +72,53 @@ jobs:
           dependencies: |
             fabric-api(required)
             modmenu(optional)
+
+  # The server half is one jar for the whole supported range, and it used to be
+  # uploaded by hand, which meant it silently fell a release behind.
+  paper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v6
+
+      - name: Build the Paper plugin
+        run: ./gradlew -p paper-plugin build --stacktrace
+
+      - name: Publish to Modrinth
+        uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: ANHah0JE
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+          files: paper-plugin/build/libs/!(*-sources).jar
+          name: ${{ inputs.version }} for Paper (server plugin)
+          version: ${{ inputs.version }}+paper
+          version-type: ${{ inputs.channel || 'release' }}
+          loaders: |
+            paper
+            purpur
+            folia
+            spigot
+            bukkit
+          # Built against the oldest API in the range, so one jar covers all of it.
+          game-versions: |
+            1.21.1
+            1.21.2
+            1.21.3
+            1.21.4
+            1.21.5
+            1.21.6
+            1.21.7
+            1.21.8
+            1.21.9
+            1.21.10
+            1.21.11
+            26.1
+            26.1.1
+            26.1.2
+            26.2
