@@ -8,6 +8,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.block.ShulkerBox;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -80,6 +82,13 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     private boolean debug;
     private Set<String> disabledWorlds = Set.of();
 
+    /** Counters behind /showmymaps, so a silent plugin can be told from a quiet server. */
+    private int scheduled;
+    private int sweeps;
+    private int mapsSent;
+    private int unresolved;
+    private boolean fellBack;
+
     @Override
     public void onEnable() {
         saveDefaultConfig();
@@ -93,6 +102,45 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         for (Player player : getServer().getOnlinePlayers()) {
             schedule(player);
         }
+    }
+
+    /**
+     * Answers the only question an owner has after installing this: is it working?
+     *
+     * <p>"Installed it and nothing changed" has three different causes and they need
+     * three different fixes. No sweeps means the plugin is not running. Sweeps but no
+     * maps sent means it is looking and finding nothing, so either the maps are not
+     * where it looks or the viewer lacks the permission. Maps sent but still blank
+     * means the client half is missing or out of date. This says which.
+     */
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        // With nobody on, every counter is zero for the dullest possible reason, and
+        // saying "nothing is running" then would send an owner hunting a bug that is
+        // not there. Ask with a player online.
+        boolean anyone = !getServer().getOnlinePlayers().isEmpty();
+
+        sender.sendMessage("SHOW MY MAPS " + getPluginMeta().getVersion());
+        sender.sendMessage("  sweeps run:      " + this.sweeps
+            + (this.sweeps == 0
+                ? (anyone ? "   <- nothing is running; see the console for errors"
+                          : "   (nobody online yet, so there is nothing to sweep)")
+                : ""));
+        sender.sendMessage("  maps sent:       " + this.mapsSent
+            + (this.sweeps > 0 && this.mapsSent == 0
+                ? "   <- looking, finding none: check showmymaps.see and disabled-worlds" : ""));
+        sender.sendMessage("  unresolvable:    " + this.unresolved
+            + (this.unresolved > 0
+                ? "   <- another plugin shows maps it has no data for; nothing can fix those" : ""));
+        sender.sendMessage("  players tracked: " + this.scheduled
+            + (this.fellBack ? " (on the main scheduler; per-player was refused)" : ""));
+
+        if (this.mapsSent > 0) {
+            sender.sendMessage("  Maps are being sent. Anything still blank is the client:"
+                + " install the Fabric mod and keep it on the same version.");
+        }
+
+        return true;
     }
 
     @Override
@@ -122,9 +170,47 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             && !disabledWorlds.contains(player.getWorld().getName().toLowerCase(Locale.ROOT));
     }
 
+    /**
+     * A pass per player, on the thread that owns that player, which is what a region
+     * threaded fork such as Folia or ShreddedPaper needs.
+     *
+     * <p>Not every fork carries that scheduler, and one that carries it can still
+     * refuse a task. Either way the old code would have thrown here and left the
+     * plugin loaded, listening, and sweeping nothing at all - the worst outcome, since
+     * it looks exactly like the plugin working and the maps simply not existing. So
+     * fall back to the plain server scheduler and say so once.
+     */
     private void schedule(Player player) {
-        player.getScheduler().runAtFixedRate(this, task -> sweep(player), null,
+        try {
+            player.getScheduler().runAtFixedRate(this, task -> sweep(player), null,
+                scanIntervalTicks, scanIntervalTicks);
+            scheduled++;
+            return;
+        } catch (LinkageError | RuntimeException e) {
+            if (!fellBack) {
+                fellBack = true;
+                getLogger().warning("This server's per-player scheduler refused a task ("
+                    + e.getClass().getSimpleName() + "), so map sweeps now run on the main"
+                    + " scheduler instead. Everything still works; on a region threaded"
+                    + " server this is worth reporting.");
+            }
+        }
+
+        getServer().getScheduler().runTaskTimer(this, () -> sweep(player),
             scanIntervalTicks, scanIntervalTicks);
+        scheduled++;
+    }
+
+    /** Runs a one-off job for a player on whichever scheduler this server accepts. */
+    private void soon(Player player, Runnable job, long delayTicks) {
+        try {
+            player.getScheduler().runDelayed(this, task -> job.run(), null, delayTicks);
+            return;
+        } catch (LinkageError | RuntimeException e) {
+            // Same story as schedule(): fall through rather than lose the job.
+        }
+
+        getServer().getScheduler().runTaskLater(this, job, delayTicks);
     }
 
     @EventHandler
@@ -133,7 +219,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         schedule(player);
 
         // A moment after joining, once the client has said which channels it takes.
-        player.getScheduler().runDelayed(this, task -> announce(player), null, 20L);
+        soon(player, () -> announce(player), 20L);
     }
 
     private void announce(Player player) {
@@ -175,14 +261,14 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         }
 
         // Far enough after the switch that the client has its new level to put them in.
-        player.getScheduler().runDelayed(this, task -> sweep(player), null, 20L);
+        soon(player, () -> sweep(player), 20L);
     }
 
     /** A GUI's first page is worth sending before the next scheduled pass. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onOpen(InventoryOpenEvent event) {
         if (event.getPlayer() instanceof Player player && allowed(player)) {
-            player.getScheduler().runDelayed(this, task -> sweep(player), null, 1L);
+            soon(player, () -> sweep(player), 1L);
         }
     }
 
@@ -190,7 +276,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player player && allowed(player)) {
-            player.getScheduler().runDelayed(this, task -> sweep(player), null, 2L);
+            soon(player, () -> sweep(player), 2L);
         }
     }
 
@@ -198,6 +284,8 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         if (!player.isOnline() || !allowed(player)) {
             return;
         }
+
+        this.sweeps++;
 
         if (openContainers) {
             Inventory top = player.getOpenInventory().getTopInventory();
@@ -330,6 +418,8 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             // The stack names a map this server has no data for. A plugin drawing its
             // own maps straight to packets does this, and nothing here can help - but
             // it is the one silent failure worth being able to see.
+            this.unresolved++;
+
             if (debug) {
                 getLogger().warning("[debug] a stack carries a map id this server cannot resolve;"
                     + " whichever plugin made it is not backing it with map data");
@@ -354,6 +444,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
 
         seen.put(view.getId(), now);
         player.sendMap(view);
+        this.mapsSent++;
 
         if (debug) {
             getLogger().info("[debug] sent map " + view.getId() + " to " + player.getName());

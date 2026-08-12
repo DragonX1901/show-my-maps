@@ -1,7 +1,11 @@
 package org.dx.showmymaps.paper;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -9,10 +13,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import io.papermc.paper.threadedregions.scheduler.EntityScheduler;
 import org.bukkit.entity.ItemFrame;
 import org.bukkit.entity.Player;
@@ -147,6 +154,46 @@ class ShowMyMapsPluginTest {
         sweep(bob);
 
         verify(bob).sendMap(view);
+    }
+
+    /**
+     * The report an owner reads after installing this and seeing no change. It has to
+     * separate "not running" from "running and finding nothing" from "sending fine, so
+     * the client is the problem", because those need three different fixes and every
+     * one of them looks identical in game.
+     */
+    @Test
+    void statusSeparatesNotRunningFromNothingToSend() throws Exception {
+        World world = server.addSimpleWorld("world");
+        MapView view = server.createMap(world);
+
+        List<String> idle = runStatus();
+
+        // Nobody online: zeroes mean nothing is wrong, and it must not cry bug.
+        assertTrue(idle.stream().anyMatch(line -> line.contains("nobody online")),
+            () -> "idle report should explain the zeroes: " + idle);
+        assertFalse(idle.stream().anyMatch(line -> line.contains("nothing is running")),
+            () -> "idle report must not claim a fault when nobody is on: " + idle);
+
+        Player player = viewer(world);
+        open(player, chestHolding(mapStack(view)));
+        sweep(player);
+
+        List<String> busy = runStatus();
+
+        assertTrue(busy.stream().anyMatch(line -> line.contains("maps sent:       1")),
+            () -> "a sent map should be counted: " + busy);
+        assertTrue(busy.stream().anyMatch(line -> line.contains("Anything still blank is the client")),
+            () -> "with maps going out, the report should point at the client: " + busy);
+    }
+
+    /** Runs /showmymaps and collects what it printed. */
+    private List<String> runStatus() {
+        List<String> lines = new ArrayList<>();
+        CommandSender sender = mock(CommandSender.class);
+        doAnswer(call -> lines.add(call.getArgument(0))).when(sender).sendMessage(anyString());
+        plugin.onCommand(sender, mock(Command.class), "showmymaps", new String[0]);
+        return lines;
     }
 
     /**

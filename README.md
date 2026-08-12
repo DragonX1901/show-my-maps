@@ -106,10 +106,25 @@ Owners decide who gets previews: everyone holds `showmymaps.see` unless you take
 `disabled-worlds` turns whole worlds off by name. A player without it is never *sent* the
 colours, so there is nothing on their client to reveal.
 
-If previews stay blank, set `debug: true`. It logs every map sent, and every stack naming a map
-the server cannot resolve — which separates "the plugin is not looking there" from "another
-plugin drew that map straight to packets and there is no map data behind it", the one case
-nothing on either side can fix.
+If previews stay blank after installing it, run **`/showmymaps`**. Installed-and-nothing-changed
+has three causes that look identical in game, and the report says which one you have:
+
+```
+SHOW MY MAPS 1.1.1
+  sweeps run:      23
+  maps sent:       108
+  unresolvable:    0
+  players tracked: 1
+  Maps are being sent. Anything still blank is the client: install the Fabric mod.
+```
+
+No sweeps means it is not running, so check the console. Sweeps with no maps sent means it is
+looking and finding nothing, so check `showmymaps.see` and `disabled-worlds`. Maps sent and still
+blank means the client half is missing or on a different version. A non-zero `unresolvable` count
+means another plugin is showing maps the server holds no data for, which is the one case nothing
+on either side can fix.
+
+For the full picture set `debug: true`, which logs every individual send.
 
 Either half announces itself and its version on joining, so the mod can tell "this server sends
 nothing" apart from "this server is behind", and say which. Update both halves together.

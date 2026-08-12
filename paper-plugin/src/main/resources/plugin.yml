@@ -10,3 +10,11 @@ permissions:
   showmymaps.see:
     description: Receive map colours for maps the player can see but is not carrying.
     default: true
+  showmymaps.status:
+    description: Run /showmymaps to see whether map sending is working.
+    default: op
+commands:
+  showmymaps:
+    description: Report whether map sending is working, and what to fix if it is not.
+    usage: /showmymaps
+    permission: showmymaps.status
