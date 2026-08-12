@@ -66,6 +66,13 @@ public final class MapDataCache {
      */
     private static final Map<Integer, byte[]> unverified = new HashMap<>();
 
+    /**
+     * Ids this address has been caught using for more than one picture, which behind a
+     * proxy is every id two backends both handed out. Kept on disk beside the maps,
+     * because the proof arrives once and the wrong art would be drawn every session after.
+     */
+    private static final Set<Integer> contested = new HashSet<>();
+
     private static String serverKey = "unknown";
 
     private MapDataCache() {
@@ -86,6 +93,53 @@ public final class MapDataCache {
         dirty.clear();
         missing.clear();
         unverified.clear();
+        loadContested();
+    }
+
+    /** Whether this id has been proved to mean different pictures on this address. */
+    public static boolean isContested(MapId mapId) {
+        return contested.contains(mapId.id());
+    }
+
+    /** How many ids this address is known to reuse. For the diagnostics line and tests. */
+    public static int contestedCount() {
+        return contested.size();
+    }
+
+    private static Path contestedFile() {
+        return ROOT.resolve(serverKey).resolve("contested_ids.txt");
+    }
+
+    private static void loadContested() {
+        contested.clear();
+        Path file = contestedFile();
+
+        if (!Files.exists(file)) {
+            return;
+        }
+
+        try {
+            for (String line : Files.readAllLines(file)) {
+                String trimmed = line.trim();
+
+                if (!trimmed.isEmpty()) {
+                    contested.add(Integer.valueOf(trimmed));
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            Show_my_maps.LOGGER.warn("Could not read {}", file, e);
+        }
+    }
+
+    private static void saveContested() {
+        Path file = contestedFile();
+
+        try {
+            Files.createDirectories(file.getParent());
+            Files.write(file, contested.stream().map(String::valueOf).toList());
+        } catch (IOException e) {
+            Show_my_maps.LOGGER.warn("Could not write {}", file, e);
+        }
     }
 
     /** Which server's folder the cache is writing to, and art sources are keyed by. */
@@ -125,11 +179,48 @@ public final class MapDataCache {
 
             if (data != null) {
                 verify(mapId, data);
+                contest(mapId, data);
                 write(mapId, data, FROM_SERVER);
             }
         }
 
         dirty.clear();
+    }
+
+    /**
+     * Behind a proxy every backend hands out map ids from its own counter, so map 42
+     * on one is a different picture from map 42 on the next, and the cache - which is
+     * keyed by the address you typed, one address for the whole network - would answer
+     * a lookup on the second with the first one's art.
+     *
+     * <p>Nothing the client can see says which backend it is on. What it can see is a
+     * contradiction: the server has just sent map 42, and the copy already on disk
+     * under that id is demonstrably a different map. That is proof the id is reused,
+     * and from then on the cache refuses to answer for it - only what the server sends
+     * this session will draw. Ids that never collide are untouched.
+     *
+     * <p>Proof, not suspicion. A map the players are still exploring legitimately
+     * changes its colours, so colours alone say nothing; only a changed scale or
+     * dimension, or two locked maps that differ, can be the same id being reused.
+     */
+    private static void contest(MapId mapId, MapItemSavedData fresh) {
+        if (contested.contains(mapId.id())) {
+            return;
+        }
+
+        Identity previous = identityOf(mapId);
+
+        if (previous == null || !previous.contradicts(fresh)) {
+            return;
+        }
+
+        contested.add(mapId.id());
+        saveContested();
+        // The cached copy is somebody else's map. Nothing should read it again.
+        missing.remove(mapId);
+        Show_my_maps.LOGGER.info(
+            "Map id {} means more than one picture on {}; the cache will not answer for it again",
+            mapId.id(), serverKey);
     }
 
     /**
@@ -159,6 +250,72 @@ public final class MapDataCache {
     }
 
     /**
+     * What the cached copy of an id says it is. Only the fields that cannot change
+     * over a map's life, plus the colours when the map is locked and so cannot either.
+     */
+    private record Identity(byte scale, boolean locked, String dimension, byte @Nullable [] colours) {
+        /**
+         * True only when the two cannot be the same map. A map's scale and dimension
+         * are fixed when it is made, and a locked map's colours never move again, so
+         * any of those differing is proof rather than a guess. Colours on an unlocked
+         * map say nothing: players are still filling it in.
+         */
+        boolean contradicts(MapItemSavedData fresh) {
+            //? if >=1.21.9 {
+            String freshDimension = fresh.dimension.identifier().toString();
+            //?} else {
+            /*String freshDimension = fresh.dimension.location().toString();
+            *///?}
+
+            if (this.scale != fresh.scale || !this.dimension.equals(freshDimension)) {
+                return true;
+            }
+
+            return this.locked && fresh.locked && this.colours != null
+                && !Arrays.equals(this.colours, fresh.colors);
+        }
+    }
+
+    /** Reads just enough of a cached file to compare it, without restoring it. */
+    private static @Nullable Identity identityOf(MapId mapId) {
+        Path file = fileFor(mapId);
+
+        if (!Files.exists(file)) {
+            return null;
+        }
+
+        try (InputStream in = Files.newInputStream(file); DataInputStream data = new DataInputStream(in)) {
+            int format = data.readInt();
+
+            if (format != FORMAT && format != FORMAT_V1) {
+                return null;
+            }
+
+            byte trust = format == FORMAT ? data.readByte() : FROM_SERVER;
+
+            if (trust != FROM_SERVER) {
+                // A guess from an art source is not evidence about what this server means.
+                return null;
+            }
+
+            byte scale = data.readByte();
+            boolean locked = data.readBoolean();
+            String dimension = data.readUTF();
+
+            if (!locked) {
+                // Only a locked map's colours are worth reading, and worth trusting.
+                return new Identity(scale, false, dimension, null);
+            }
+
+            byte[] colours = new byte[COLOUR_COUNT];
+            data.readFully(colours);
+            return new Identity(scale, true, dimension, colours);
+        } catch (IOException | RuntimeException e) {
+            return null;
+        }
+    }
+
+    /**
      * Reads a map the server has not sent this session and hands it to the client
      * level, so vanilla lookups and any later patch packet work on it.
      */
@@ -171,6 +328,12 @@ public final class MapDataCache {
         }
 
         if (missing.contains(mapId)) {
+            return null;
+        }
+
+        if (contested.contains(mapId.id())) {
+            // This address has been caught using this id for two different pictures,
+            // so the copy on disk is as likely to be the wrong one. Blank beats wrong.
             return null;
         }
 
