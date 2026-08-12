@@ -11,6 +11,7 @@
       "org.dx.show_my_maps.gametest.HarvestNoticeTest",
       "org.dx.show_my_maps.gametest.MapArtSourceTest",
       "org.dx.show_my_maps.gametest.ContestedIdTest",
+      "org.dx.show_my_maps.gametest.LateArrivalTest",
       "org.dx.show_my_maps.gametest.LogoShotTest"
     ]
   },
