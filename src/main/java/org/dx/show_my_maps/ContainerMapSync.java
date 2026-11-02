@@ -5,8 +5,10 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.item.component.ItemContainerContents;
 import net.minecraft.world.level.saveddata.maps.MapId;
@@ -83,6 +85,45 @@ public final class ContainerMapSync {
             if (packet != null) {
                 player.connection.send(packet);
             }
+        }
+
+        if (player.containerMenu instanceof MerchantMenu merchantMenu) {
+            for (MerchantOffer offer : merchantMenu.getOffers()) {
+                syncOffer(player, level, config, offer);
+            }
+        }
+    }
+
+    private static void syncOffer(ServerPlayer player, ServerLevel level, ShowMyMapsServerConfig config, MerchantOffer offer) {
+        syncMapStack(player, level, config, offer.getResult());
+        syncMapStack(player, level, config, offer.getCostA());
+        if (!offer.getCostB().isEmpty()) {
+            syncMapStack(player, level, config, offer.getCostB());
+        }
+    }
+
+    private static void syncMapStack(ServerPlayer player, ServerLevel level, ShowMyMapsServerConfig config, ItemStack stack) {
+        if (stack.isEmpty() || !(stack.getItem() instanceof MapItem mapItem)) {
+            return;
+        }
+
+        MapId mapId = stack.get(DataComponents.MAP_ID);
+        MapItemSavedData data = MapItem.getSavedData(mapId, level);
+
+        if (data == null) {
+            return;
+        }
+
+        data.getHoldingPlayer(player);
+
+        if (config.paintContainerMaps && !data.locked) {
+            mapItem.update(level, player, data);
+        }
+
+        Packet<?> packet = data.getUpdatePacket(mapId, player);
+
+        if (packet != null) {
+            player.connection.send(packet);
         }
     }
 
