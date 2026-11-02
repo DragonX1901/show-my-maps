@@ -6,75 +6,129 @@
 <title>Show My Maps — cache viewer</title>
 <style>
   :root { color-scheme: dark; }
-  body { font-family: system-ui, sans-serif; margin: 0; background: #1a1a1a; color: #eee; }
-  header { padding: 16px 24px; border-bottom: 1px solid #333; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #121212; color: #eee; }
+  header { padding: 16px 24px; border-bottom: 1px solid #2a2a2a; }
   h1 { margin: 0; font-size: 18px; }
-  main { padding: 24px; max-width: 900px; margin: 0 auto; }
-  .drop { border: 2px dashed #555; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; }
-  .drop:hover { border-color: #888; }
-  canvas { image-rendering: pixelated; border: 1px solid #333; margin-top: 16px; }
-  .info { margin-top: 12px; font-size: 13px; color: #aaa; }
-  .row { display: flex; gap: 12px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
-  button { padding: 8px 14px; background: #333; color: #eee; border: 1px solid #555; border-radius: 6px; cursor: pointer; }
-  button:hover { background: #444; }
-  select, input[type=text] { padding: 8px; background: #222; color: #eee; border: 1px solid #555; border-radius: 6px; }
+  .sub { margin: 4px 0 0; font-size: 13px; color: #999; }
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  button { padding: 8px 14px; background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #3a3a3a; }
+  .drop { border: 2px dashed #444; border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; margin-bottom: 16px; }
+  .drop:hover { border-color: #888; background: #1a1a1a; }
+  .drop input { display: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .tile { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px; }
+  .tile canvas { width: 100%; height: auto; image-rendering: pixelated; border: 1px solid #333; border-radius: 4px; display: block; }
+  .tile .name { font-size: 12px; color: #ccc; margin-top: 8px; word-break: break-all; }
+  .tile .meta { font-size: 11px; color: #777; margin-top: 2px; }
+  .empty { color: #666; text-align: center; padding: 40px; }
+  #status { font-size: 13px; color: #999; }
 </style>
 </head>
 <body>
-<header><h1>Show My Maps — on-disk cache viewer</h1></header>
+<header>
+  <h1>Show My Maps — on-disk cache viewer</h1>
+  <p class="sub">Drop files or a folder of <code>.bin</code> caches, bare 16384-byte colour dumps, or 128×128 PNGs. Everything runs locally.</p>
+</header>
 <main>
-  <p>Drop a <code>.bin</code> file from your <code>config/show_my_maps</code> cache, a bare 16384-byte colour dump, or a 128×128 PNG. Nothing is uploaded; everything runs in your browser.</p>
-  <div class="drop" id="drop">Drop a file here, or click to choose
-    <input type="file" id="file" accept=".bin,image/png,*/*" hidden>
+  <div class="controls">
+    <button id="pickFiles">Choose files</button>
+    <button id="pickFolder">Choose folder</button>
+    <button id="clear">Clear</button>
+    <span id="status"></span>
   </div>
-  <div class="row">
-    <button id="download">Download as PNG</button>
-    <span class="info" id="info"></span>
+  <div class="drop" id="drop">
+    Drop files or a folder here
+    <input type="file" id="fileInput" multiple hidden>
+    <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
   </div>
-  <canvas id="canvas" width="128" height="128"></canvas>
-  <div class="info" id="meta"></div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">No files loaded yet.</div>
 </main>
 <script>
-const PALETTE = [0, 0, 0, 0, -10912473, -9594576, -8408520, -12362211, -5331853, -2766452, -530013, -8225962, -7566196, -5526613, -3684409, -9868951, -4980736, -2359296, -65536, -7929856, -9408332, -7697700, -6250241, -11250553, -9079435, -7303024, -5789785, -10987432, -16754944, -16750080, -16745472, -16760576, -4934476, -2302756, -1, -7895161, -9210239, -7499618, -5986120, -11118495, -9810890, -8233406, -6853299, -11585240, -11579569, -10461088, -9408400, -12895429, -13816396, -13158436, -12566273, -14605945, -10202062, -8690114, -7375032, -11845850, -4935252, -2303533, -779, -7895679, -6792924, -4559572, -2588877, -9288933, -8571496, -6733382, -5092136, -10606478, -12030824, -10976070, -10053160, -13217422, -6184668, -3816148, -1710797, -8816357, -10907631, -9588715, -8401895, -12358643, -5613196, -3117682, -884827, -8371369, -13290187, -12500671, -11776948, -14145496, -9671572, -8092540, -6710887, -11447983, -13280916, -12489340, -11763815, -14138543, -10933123, -9619815, -8437838, -12377762, -14404227, -13876839, -13415246, -14997410, -12045020, -10993364, -10073037, -13228005, -12035804, -10982100, -10059981, -13221093, -9690076, -8115156, -6737101, -11461861, -15658735, -15395563, -15132391, -15921907, -5199818, -2634430, -332211, -8094168, -12543338, -11551561, -10691627, -13601936, -13346124, -12620068, -11894529, -14204025, -16738008, -16729294, -16721606, -16748002, -10798046, -9483734, -8301007, -12309223, -11599616, -10485504, -9436672, -12910336, -7111567, -4941686, -3034719, -9544363, -9422567, -7780833, -6335964, -11261165, -9880244, -8369315, -6989972, -11653575, -11580319, -10461833, -9409398, -12895927, -8168167, -6262241, -4553436, -10336749, -12037595, -10984403, -9997003, -13222628, -9423305, -7716285, -6271666, -11261911, -14148584, -13556962, -13031133, -14805742, -10532027, -9151404, -7902366, -12109773, -12763072, -11841713, -11051940, -13750224, -11128002, -9879989, -8763048, -12573138, -13292736, -12503729, -11780516, -14147536, -13294824, -12506338, -11783645, -14149102, -13289187, -12499420, -11775446, -14144746, -10212832, -8768729, -7455698, -11854056, -15069429, -14740979, -14346736, -15529208, -8052446, -6084310, -4378575, -10217191, -9950140, -8440237, -7061663, -11656909, -12578540, -11594471, -10741475, -13628145, -15771554, -15569805, -15303034, -16039354, -14130078, -13469064, -12939636, -14791862, -12837077, -11918027, -11129794, -13822176, -15827107, -15623310, -15420283, -16097466, -12171706, -11119018, -10197916, -13355980, -6784153, -4548994, -2576493, -9282483, -10914455, -9596799, -8411242, -12363697, 0, 0, 0, 0, 0, 0, 0, 0];
-
-const drop = document.getElementById('drop');
-const fileInput = document.getElementById('file');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const info = document.getElementById('info');
-const meta = document.getElementById('meta');
-
-drop.addEventListener('click', () => fileInput.click());
-drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor = '#aaa'; });
-drop.addEventListener('dragleave', () => drop.style.borderColor = '#555');
-drop.addEventListener('drop', e => { e.preventDefault(); drop.style.borderColor = '#555'; handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
-
-function handleFile(f) {
-  if (!f) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const buf = new Uint8Array(reader.result);
-    try {
-      const art = decode(buf);
-      render(art.colours);
-      info.textContent = f.name + ' — ' + buf.length + ' bytes';
-      meta.textContent = 'scale=' + art.scale + '  locked=' + art.locked + '  dimension=' + art.dimension;
-    } catch (e) {
-      info.textContent = 'Could not read: ' + e.message;
-      meta.textContent = '';
-    }
-  };
-  reader.readAsArrayBuffer(f);
-}
-
+const PALETTE = /*PALETTE_JSON*/;
 const COLOUR_COUNT = 128 * 128;
 
-function decode(body) {
+const grid = document.getElementById('grid');
+const empty = document.getElementById('empty');
+const status = document.getElementById('status');
+
+document.getElementById('pickFiles').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('pickFolder').addEventListener('click', () => document.getElementById('folderInput').click());
+document.getElementById('clear').addEventListener('click', () => { grid.innerHTML = ''; updateEmpty(); });
+document.getElementById('fileInput').addEventListener('change', e => loadFiles([...e.target.files]));
+document.getElementById('folderInput').addEventListener('change', e => loadFiles([...e.target.files]));
+const drop = document.getElementById('drop');
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor = '#aaa'; });
+drop.addEventListener('dragleave', () => drop.style.borderColor = '#444');
+drop.addEventListener('drop', e => { e.preventDefault(); drop.style.borderColor = '#444'; loadFiles([...e.dataTransfer.files]); });
+
+function updateEmpty() {
+  empty.style.display = grid.children.length ? 'none' : 'block';
+}
+updateEmpty();
+
+async function loadFiles(files) {
+  const list = files.filter(f => !f.name.startsWith('.'));
+  status.textContent = 'Loading ' + list.length + ' file(s)...';
+  let done = 0;
+  for (const f of list) {
+    try {
+      const buf = new Uint8Array(await f.arrayBuffer());
+      const art = await decode(buf);
+      addTile(f.name, art);
+    } catch (e) {
+      addTile(f.name, null, e.message);
+    }
+    done++;
+    status.textContent = 'Loaded ' + done + '/' + list.length;
+  }
+  status.textContent = 'Loaded ' + list.length + ' file(s).';
+  updateEmpty();
+}
+
+function addTile(name, art, err) {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const cx = c.getContext('2d');
+  if (art) {
+    const img = cx.createImageData(128, 128);
+    for (let i = 0; i < COLOUR_COUNT; i++) {
+      const argb = PALETTE[art.colours[i]];
+      img.data[i*4]   = (argb >> 16) & 0xFF;
+      img.data[i*4+1] = (argb >> 8) & 0xFF;
+      img.data[i*4+2] = argb & 0xFF;
+      img.data[i*4+3] = (argb >>> 24) & 0xFF;
+    }
+    cx.putImageData(img, 0, 0);
+  } else {
+    cx.fillStyle = '#333';
+    cx.fillRect(0, 0, 128, 128);
+    cx.fillStyle = '#f66';
+    cx.font = '12px system-ui';
+    cx.textAlign = 'center';
+    cx.fillText('unreadable', 64, 64);
+  }
+  tile.appendChild(c);
+  const n = document.createElement('div');
+  n.className = 'name';
+  n.textContent = name;
+  tile.appendChild(n);
+  const m = document.createElement('div');
+  m.className = 'meta';
+  m.textContent = err ? err : ('scale ' + art.scale + ' · ' + art.dimension + (art.locked ? ' · locked' : ''));
+  tile.appendChild(m);
+  grid.appendChild(tile);
+}
+
+async function decode(body) {
   if (body.length === COLOUR_COUNT) {
     return { scale: 0, locked: false, dimension: 'minecraft:overworld', colours: body.slice() };
   }
-  // PNG magic
   if (body.length >= 8 && body[0] === 0x89 && body[1] === 0x50 && body[2] === 0x4E && body[3] === 0x47) {
     return decodePng(body);
   }
@@ -86,10 +140,9 @@ function decodeCache(body) {
   let off = 0;
   const format = dv.getInt32(off, false); off += 4;
   if (format !== 1 && format !== 2) throw new Error('not a map file: format ' + format);
-  if (format === 2) off += 1; // trust byte
+  if (format === 2) off += 1;
   const scale = dv.getInt8(off); off += 1;
   const locked = dv.getUint8(off) !== 0; off += 1;
-  // readUTF: 2-byte length then modified UTF-8
   const strLen = dv.getUint16(off, false); off += 2;
   const bytes = body.slice(off, off + strLen); off += strLen;
   const dimension = new TextDecoder('utf-8').decode(bytes);
@@ -99,7 +152,6 @@ function decodeCache(body) {
 }
 
 function decodePng(body) {
-  // Use browser's native decoder via Image + canvas
   return new Promise((resolve, reject) => {
     const blob = new Blob([body], { type: 'image/png' });
     const url = URL.createObjectURL(blob);
@@ -111,13 +163,12 @@ function decodePng(body) {
       cx.drawImage(img, 0, 0, 128, 128);
       const px = cx.getImageData(0, 0, 128, 128).data;
       const colours = new Uint8Array(COLOUR_COUNT);
-      const table = PALETTE;
       for (let i = 0; i < COLOUR_COUNT; i++) {
         const r = px[i*4], g = px[i*4+1], b = px[i*4+2], a = px[i*4+3];
         if (a < 0x80) { colours[i] = 0; continue; }
         let best = 0, bestD = Infinity;
         for (let idx = 4; idx < 256; idx++) {
-          const p = table[idx];
+          const p = PALETTE[idx];
           if ((p >>> 24) === 0) continue;
           const dr = ((p >> 16) & 0xFF) - r;
           const dg = ((p >> 8) & 0xFF) - g;
@@ -135,59 +186,16 @@ function decodePng(body) {
     img.src = url;
   });
 }
-
-// decode may be async for PNG; wrap handleFile usage? We made decode sync for cache/raw, async for png.
-// Rework handleFile to support async decode:
-const _origHandle = handleFile;
-// redefine handleFile to await decode
-async function handleFileAsync(f) {
-  if (!f) return;
-  const reader = new FileReader();
-  reader.onload = async () => {
-    const buf = new Uint8Array(reader.result);
-    try {
-      const art = await decode(buf);
-      render(art.colours);
-      info.textContent = f.name + ' — ' + buf.length + ' bytes';
-      meta.textContent = 'scale=' + art.scale + '  locked=' + art.locked + '  dimension=' + art.dimension;
-    } catch (e) {
-      info.textContent = 'Could not read: ' + e.message;
-      meta.textContent = '';
-    }
-  };
-  reader.readAsArrayBuffer(f);
-}
-// replace click handlers
-drop.removeEventListener('click', () => {});
-// rebind
-const newDrop = drop.cloneNode(true);
-drop.parentNode.replaceChild(newDrop, drop);
-// simpler: just override global handleFile by monkey-patching via reassigning? We'll instead call handleFileAsync.
-document.getElementById('drop').addEventListener('click', () => document.getElementById('file').click());
-document.getElementById('drop').addEventListener('dragover', e => { e.preventDefault(); });
-document.getElementById('drop').addEventListener('drop', e => { e.preventDefault(); handleFileAsync(e.dataTransfer.files[0]); });
-document.getElementById('file').addEventListener('change', e => handleFileAsync(e.target.files[0]));
-
-function render(colours) {
-  const img = ctx.createImageData(128, 128);
-  for (let i = 0; i < COLOUR_COUNT; i++) {
-    const argb = PALETTE[colours[i]];
-    img.data[i*4]   = (argb >> 16) & 0xFF;
-    img.data[i*4+1] = (argb >> 8) & 0xFF;
-    img.data[i*4+2] = argb & 0xFF;
-    img.data[i*4+3] = (argb >>> 24) & 0xFF;
-  }
-  ctx.putImageData(img, 0, 0);
-}
-
-document.getElementById('download').addEventListener('click', () => {
-  const a = document.createElement('a');
-  a.download = 'map.png';
-  a.href = canvas.toDataURL('image/png');
-  a.click();
-});
 </script>
 </body>
 </html>
 EOF
-echo "written"
+# inject palette
+python3 - <<'PY'
+import json
+palette = json.load(open('/tmp/opencode/palette.json'))
+html = open('web/map-viewer/index.html').read()
+html = html.replace('/*PALETTE_JSON*/', json.dumps(palette))
+open('web/map-viewer/index.html','w').write(html)
+print("ok")
+PY
