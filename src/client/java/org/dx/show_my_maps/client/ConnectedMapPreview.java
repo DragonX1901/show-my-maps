@@ -1,6 +1,6 @@
 package org.dx.show_my_maps.client;
 
-//? if >=1.21.9 {
+//? if >=1.21 {
 //? if >=26 {
 /*import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -8,9 +8,6 @@ import net.minecraft.client.renderer.state.MapRenderState;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
-// Draws one map of a joined picture. The map is scaled to the whole span of the
-// neighbouring slots, then clipped to this slot plus the gaps it has a neighbour
-// on, so the parchment gap disappears without painting over an empty slot.
 public final class ConnectedMapPreview {
     private ConnectedMapPreview() {
     }
@@ -44,6 +41,7 @@ public final class ConnectedMapPreview {
     }
 }
 *///?} else {
+//? if >=1.21.9 {
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.state.MapRenderState;
@@ -82,6 +80,45 @@ public final class ConnectedMapPreview {
         }
     }
 }
+//?} else {
+/*import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
+
+public final class ConnectedMapPreview {
+    private ConnectedMapPreview() {
+    }
+
+    public static void draw(GuiGraphics graphics, MapId mapId, MapItemSavedData data, TileLayout.Tile tile) {
+        Minecraft mc = Minecraft.getInstance();
+        TileLayout.Rect bounds = tile.bounds();
+
+        for (TileLayout.Rect clip : tile.clips()) {
+            graphics.enableScissor(
+                Math.round(clip.x()),
+                Math.round(clip.y()),
+                Math.round(clip.x() + clip.width()),
+                Math.round(clip.y() + clip.height()));
+
+            PoseStack pose = graphics.pose();
+            pose.pushPose();
+            pose.translate(bounds.x(), bounds.y(), 0.0F);
+            pose.scale(bounds.width() / 128.0F, bounds.height() / 128.0F, 1.0F);
+
+            MultiBufferSource.BufferSource buffers = graphics.bufferSource();
+            mc.gameRenderer.getMapRenderer().render(pose, buffers, mapId, data, false, LightTexture.FULL_BRIGHT);
+            buffers.endBatch();
+
+            pose.popPose();
+            graphics.disableScissor();
+        }
+    }
+}
+*///?}
 //?}
 //?} else {
 /*public final class ConnectedMapPreview {

@@ -1,6 +1,6 @@
 package org.dx.show_my_maps.mixin.client;
 
-//? if >=1.21.9 {
+//? if >=1.21 {
 //? if >=26 {
 /*import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;

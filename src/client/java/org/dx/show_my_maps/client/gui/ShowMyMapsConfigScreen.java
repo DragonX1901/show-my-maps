@@ -81,7 +81,7 @@ public class ShowMyMapsConfigScreen extends Screen {
             .create(leftColumn, top + ROW_HEIGHT * 5, columnWidth, 20, Component.translatable("option.show_my_maps.external_art"),
                 (button, value) -> config.externalArt = value));
 
-//? if >=1.21.9 {
+//? if >=1.21 {
         addRenderableWidget(CycleButton.onOffBuilder(config.connectedSlotPreview)
             .create(leftColumn, top + ROW_HEIGHT * 6, columnWidth, 20, Component.translatable("option.show_my_maps.connected_slot_preview"),
                 (button, value) -> config.connectedSlotPreview = value));
