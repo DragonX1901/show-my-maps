@@ -4,6 +4,8 @@
   "screen.show_my_maps.config": "Show My Maps",
   "option.show_my_maps.slot_preview": "Map icons",
   "option.show_my_maps.slot_preview_size": "Icon size",
+  "option.show_my_maps.connected_slot_preview": "Join adjacent maps",
+  "option.show_my_maps.connected_highlight": "Hover box on joined maps",
   "option.show_my_maps.tooltip": "Tooltip",
   "option.show_my_maps.tooltip_size": "Tooltip size",
   "option.show_my_maps.cache": "Remember maps",

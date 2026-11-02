@@ -34,6 +34,10 @@ public class ShowMyMapsConfig {
     public boolean slotPreview = true;
     /** Size of that slot picture. A vanilla item icon is 16. */
     public int slotPreviewSize = 16;
+    /** Join adjacent maps into one picture, instead of drawing each icon separately. */
+    public boolean connectedSlotPreview = true;
+    /** Keep vanilla's hover box around a slot that is part of a joined picture. */
+    public boolean connectedSlotHighlight = true;
     /** Show the contents of a shulker box as a slot grid in its tooltip. */
     public boolean containerTooltip = true;
     /** Keep received map colours on disk, so maps you have seen once keep previewing. */

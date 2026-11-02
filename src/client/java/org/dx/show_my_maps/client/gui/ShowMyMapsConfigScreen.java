@@ -81,6 +81,13 @@ public class ShowMyMapsConfigScreen extends Screen {
             .create(leftColumn, top + ROW_HEIGHT * 5, columnWidth, 20, Component.translatable("option.show_my_maps.external_art"),
                 (button, value) -> config.externalArt = value));
 
+        addRenderableWidget(CycleButton.onOffBuilder(config.connectedSlotPreview)
+            .create(leftColumn, top + ROW_HEIGHT * 6, columnWidth, 20, Component.translatable("option.show_my_maps.connected_slot_preview"),
+                (button, value) -> config.connectedSlotPreview = value));
+        addRenderableWidget(CycleButton.onOffBuilder(config.connectedSlotHighlight)
+            .create(rightColumn, top + ROW_HEIGHT * 6, columnWidth, 20, Component.translatable("option.show_my_maps.connected_highlight"),
+                (button, value) -> config.connectedSlotHighlight = value));
+
         // The address belongs to one server, so it can only be set while on one.
         // From the title screen there is nothing to key it by.
         String server = this.minecraft != null && this.minecraft.level != null ? MapDataCache.serverKey() : null;
@@ -107,7 +114,7 @@ public class ShowMyMapsConfigScreen extends Screen {
         addRenderableWidget(address);
 
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 6 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 7 + 8, this.height - 28), WIDGET_WIDTH, 20)
             .build());
     }
 

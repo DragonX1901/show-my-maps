@@ -18,6 +18,9 @@ real thing instead.
 
 - **Map icons** — the slot shows the art in place of the parchment sprite, so a page full of map
   art reads at a glance, with no hovering.
+- **Joined map art** — maps in touching slots (a 2×2 in a chest, a row in your inventory, a wall
+  in an auction page) draw as one continuous picture instead of separate icons with parchment
+  gaps. Turn it off with **Join adjacent maps**.
 - **Tooltip preview** — hover a map anywhere a tooltip appears — inventory, chest, hopper,
   creative menu, a shop GUI — and the picture renders under the normal lines.
 - **Maps you never carried** — a chest full of art reads as art, not as a row of identical

@@ -4,6 +4,7 @@
   "package": "org.dx.show_my_maps.mixin.client",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "ContainerMapPreviewMixin",
     "ContainerTooltipLinesMixin",
     "DroppedMapEntityMixin",
     "ItemTooltipImageMixin",
