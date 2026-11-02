@@ -61,6 +61,7 @@ document.getElementById('clear').addEventListener('click', () => { grid.innerHTM
 document.getElementById('fileInput').addEventListener('change', e => loadFiles([...e.target.files]));
 document.getElementById('folderInput').addEventListener('change', e => loadFiles([...e.target.files]));
 const drop = document.getElementById('drop');
+drop.addEventListener('click', () => document.getElementById('fileInput').click());
 drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor = '#aaa'; });
 drop.addEventListener('dragleave', () => drop.style.borderColor = '#444');
 drop.addEventListener('drop', e => { e.preventDefault(); drop.style.borderColor = '#444'; loadFiles([...e.dataTransfer.files]); });
