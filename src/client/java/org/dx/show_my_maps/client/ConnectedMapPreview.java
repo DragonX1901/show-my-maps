@@ -1,6 +1,6 @@
 package org.dx.show_my_maps.client;
 
-//? if >=26.2 {
+//? if >=26 {
 /*import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.state.MapRenderState;

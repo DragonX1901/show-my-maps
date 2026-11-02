@@ -69,9 +69,9 @@ A server half is not the only place those pixels can come from. They are also si
 server's own `world/data/map_*.dat`, and an owner who publishes that folder gives every player a
 place to read them from — **without installing anything or restarting**.
 
-Read [map-export](map-export) for the tool that does the publishing. It takes a world folder or a
-backup zip and writes `<id>.bin` plus a `manifest.json`; copy that to any static host over HTTPS.
-
+Publishing is done by hand now: a world's `data/map_*.dat` files are converted to
+`<id>.bin` plus a `manifest.json` and copied to any static host over HTTPS. (The
+bundled exporter was dropped; see the project history for why.)
 On the client, turn on **Fetch missing art** and put the address in **Art source**. It is set per
 server, off by default, and only asked for maps that would otherwise draw blank. A folder is
 enough; a template with `{id}` in it works too if your host wants a different layout. Three
