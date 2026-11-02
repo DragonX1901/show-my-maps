@@ -19,5 +19,7 @@
   "chat.show_my_maps.art_source_wrong": "Show My Maps: このサーバーの画像ソースが誤った画像を送り続けたため、無効化し、受信した内容を破棄しました。",
   "chat.show_my_maps.harvest": "Show My Maps: 不足していた地図プレビュー %s 件を補完しました — メニューを開き直すと表示されます",
   "chat.show_my_maps.server_outdated": "このサーバーは SHOW MY MAPS %s を実行しています。このバージョンは %s 以降を必要とするため、運営者に更新を依頼してください。",
-  "chat.show_my_maps.server_missing": "SHOW MY MAPS はこのサーバーにインストールされていないか、1.0.3 より古いため通知できません。そのため、手に持っている地図と、近づいた額縁の地図しか送信されません。チェスト内、シュルカーボックス内、地面にある地図は、そのどちらかの方法で見るまで空白のままです。"
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS はこのサーバーにインストールされていないか、1.0.3 より古いため通知できません。そのため、手に持っている地図と、近づいた額縁の地図しか送信されません。チェスト内、シュルカーボックス内、地面にある地図は、そのどちらかの方法で見るまで空白のままです。",
+  "option.show_my_maps.connected_slot_preview": "Join adjacent maps",
+  "option.show_my_maps.connected_highlight": "Hover box on joined maps"
 }
