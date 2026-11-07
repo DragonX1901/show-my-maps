@@ -160,17 +160,32 @@ public final class LowResMapTextures {
     }
 
     public static void invalidateAll() {
-        TextureManager textures = Minecraft.getInstance().getTextureManager();
+        Minecraft minecraft = Minecraft.getInstance();
 
-        if (textures == null) {
+        if (minecraft == null) {
             return;
         }
 
-        for (LowResMapTextures.Entry entry : CACHE.values()) {
-            textures.release(entry.id);
-        }
+        // Disconnect events arrive on a Netty IO thread, where touching OpenGL is
+        // illegal. Move the actual release onto the render thread.
+        minecraft.execute(() -> {
+            TextureManager textures = minecraft.getTextureManager();
 
-        CACHE.clear();
+            if (textures == null) {
+                return;
+            }
+
+            for (LowResMapTextures.Entry entry : CACHE.values()) {
+                textures.release(entry.id);
+            }
+
+            if (blankId != null) {
+                textures.release(blankId);
+                blankId = null;
+            }
+
+            CACHE.clear();
+        });
     }
 
     private static final class Entry {

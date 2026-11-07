@@ -1,7 +1,7 @@
 package org.dx.show_my_maps.client;
 
-import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Tracks whether a map picture is being drawn into an item frame, and at what
@@ -17,10 +17,10 @@ public final class MapArtOptimizerState {
     // Map ids whose eager full-resolution upload was skipped while the optimizer
     // was active. They are refreshed the first time they are drawn somewhere that
     // still wants the vanilla picture, such as a held map or an inventory preview.
-    private static final Set<Integer> deferredRefresh = new HashSet<>();
+    private static final Set<Integer> deferredRefresh = ConcurrentHashMap.newKeySet();
     // A refresh requested by the mod itself must pass through the mixin that skips
     // eager uploads, so it is marked for exactly one call.
-    private static final Set<Integer> forcedRefresh = new HashSet<>();
+    private static final Set<Integer> forcedRefresh = ConcurrentHashMap.newKeySet();
 
     private MapArtOptimizerState() {
     }
