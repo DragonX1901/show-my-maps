@@ -7,9 +7,12 @@
     "ContainerMapPreviewMixin",
     "ContainerTooltipLinesMixin",
     "DroppedMapEntityMixin",
+    "ItemFrameRendererMixin",
     "ItemTooltipImageMixin",
     "LevelSwapMixin",
     "MapDataReceivedMixin",
+    "MapRendererMixin",
+    "MapTextureManagerMixin",
     "SlotMapIconMixin"
   ],
   "injectors": {

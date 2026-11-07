@@ -29,6 +29,9 @@ real thing instead.
 - **Shulker box tooltip** — hover a box and its contents appear as a slot grid, maps included,
   replacing vanilla's list of item names. Steps aside automatically if you have
   [Shulker Box Tooltip](https://modrinth.com/mod/shulkerboxtooltip) installed.
+- **Map art optimisation** (26.x) — framed map art can be rebuilt at a lower resolution, or
+  blanked past a set distance, so a wall of maps stops eating video memory. Off by default;
+  pick a quality tier from Ultra down to Off in the settings.
 
 More screenshots on [Modrinth](https://modrinth.com/mod/show-my-maps/gallery).
 

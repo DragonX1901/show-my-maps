@@ -20,6 +20,8 @@ import org.jetbrains.annotations.Nullable;
 public class ShowMyMapsConfig {
     public static final int MIN_SIZE = 32;
     public static final int MAX_SIZE = 256;
+    public static final int MIN_MAP_ART_DISTANCE = 8;
+    public static final int MAX_MAP_ART_DISTANCE = 512;
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("show_my_maps.json");
@@ -51,6 +53,26 @@ public class ShowMyMapsConfig {
     public boolean harvestNotice = true;
     /** Log which menu maps have no colours yet and whether any arrive, for diagnosing a server. */
     public boolean harvestDebug = false;
+    /**
+     * Map Art Lite: rebuild framed map art at a lower resolution to save video memory.
+     * Off by default, because it visibly changes every framed map until a tier is
+     * picked with care.
+     */
+    public boolean mapArtEnabled = false;
+    public MapArtOptimizerQuality mapArtQuality = MapArtOptimizerQuality.MEDIUM;
+    public boolean mapArtLimitRenderDistance = true;
+    public int mapArtMaxRenderDistance = 64;
+    public boolean mapArtHideDecorations = false;
+
+    /**
+     * Map Art Lite's master switch. Off fully restores vanilla map rendering, with no
+     * low resolution or distance culling left behind.
+     */
+    public boolean mapArtActive() {
+        MapArtOptimizerQuality quality = this.mapArtQuality == null ? MapArtOptimizerQuality.MEDIUM : this.mapArtQuality;
+
+        return this.mapArtEnabled && (!quality.isVanilla() || this.mapArtLimitRenderDistance);
+    }
 
     /**
      * Fetch the pictures this server never sends from an address you name below. Off,
@@ -140,6 +162,12 @@ public class ShowMyMapsConfig {
     private void clamp() {
         this.tooltipSize = Mth.clamp(this.tooltipSize, MIN_SIZE, MAX_SIZE);
         this.slotPreviewSize = Mth.clamp(this.slotPreviewSize, 8, 16);
+        this.mapArtMaxRenderDistance = Mth.clamp(this.mapArtMaxRenderDistance, MIN_MAP_ART_DISTANCE, MAX_MAP_ART_DISTANCE);
+
+        if (this.mapArtQuality == null) {
+            // A hand-edited file can name a tier this build does not know.
+            this.mapArtQuality = MapArtOptimizerQuality.MEDIUM;
+        }
 
         if (this.artSources == null) {
             this.artSources = new LinkedHashMap<>();
