@@ -40,12 +40,6 @@ import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 
-/**
- * Regression tests for two real gaps: an open ender chest that read as "nothing
- * open" because its Bukkit holder is the owning player, and a map whose
- * hasItemMeta() lies and says false even though real MapMeta with a real view
- * is sitting right there.
- */
 class ShowMyMapsPluginTest {
     private ServerMock server;
     private ShowMyMapsPlugin plugin;
@@ -80,8 +74,7 @@ class ShowMyMapsPluginTest {
         when(player.getInventory()).thenReturn(inventory);
         when(player.getNearbyEntities(anyDouble(), anyDouble(), anyDouble())).thenReturn(List.of());
 
-        // An ender chest's Bukkit holder is the player opening it, exactly like the
-        // player's own crafting grid. Only the inventory type tells them apart.
+        // an ender chest's holder is the player, like the crafting grid; only the type differs
         Inventory enderChest = mock(Inventory.class);
         when(enderChest.getType()).thenReturn(InventoryType.ENDER_CHEST);
         when(enderChest.getHolder()).thenReturn(player);
@@ -105,8 +98,7 @@ class ShowMyMapsPluginTest {
         when(meta.hasMapView()).thenReturn(true);
         when(meta.getMapView()).thenReturn(view);
 
-        // A plain filled map with nothing set beyond the map id reports no meta at
-        // all, even though getItemMeta() still hands back a real MapMeta.
+        // a plain map reports hasItemMeta() false yet has real MapMeta
         ItemStack stack = mock(ItemStack.class);
         when(stack.hasItemMeta()).thenReturn(false);
         when(stack.getItemMeta()).thenReturn(meta);
@@ -128,7 +120,6 @@ class ShowMyMapsPluginTest {
         meta.setMapView(view);
         mapStack.setItemMeta(meta);
 
-        // One chest, one map neither player owns, exactly the auction-listing case.
         Inventory chest = mock(Inventory.class);
         when(chest.getType()).thenReturn(InventoryType.CHEST);
         when(chest.getContents()).thenReturn(new ItemStack[] {mapStack});
@@ -136,7 +127,6 @@ class ShowMyMapsPluginTest {
         Player alice = viewer(world);
         Player bob = viewer(world);
 
-        // Alice has the chest open; Bob has nothing but his own crafting grid.
         open(alice, chest);
         Inventory bobCrafting = mock(Inventory.class);
         when(bobCrafting.getType()).thenReturn(InventoryType.CRAFTING);
@@ -145,23 +135,15 @@ class ShowMyMapsPluginTest {
         sweep(alice);
         sweep(bob);
 
-        // The map goes to the one looking at it, and to no one else.
         verify(alice).sendMap(view);
         verify(bob, never()).sendMap(any());
 
-        // Bob opens the same chest: now he is owed it too, independently of Alice.
         open(bob, chest);
         sweep(bob);
 
         verify(bob).sendMap(view);
     }
 
-    /**
-     * The report an owner reads after installing this and seeing no change. It has to
-     * separate "not running" from "running and finding nothing" from "sending fine, so
-     * the client is the problem", because those need three different fixes and every
-     * one of them looks identical in game.
-     */
     @Test
     void statusSeparatesNotRunningFromNothingToSend() throws Exception {
         World world = server.addSimpleWorld("world");
@@ -169,7 +151,7 @@ class ShowMyMapsPluginTest {
 
         List<String> idle = runStatus();
 
-        // Nobody online: zeroes mean nothing is wrong, and it must not cry bug.
+        // nobody online: zeroes are not a fault
         assertTrue(idle.stream().anyMatch(line -> line.contains("nobody online")),
             () -> "idle report should explain the zeroes: " + idle);
         assertFalse(idle.stream().anyMatch(line -> line.contains("nothing is running")),
@@ -187,7 +169,6 @@ class ShowMyMapsPluginTest {
             () -> "with maps going out, the report should point at the client: " + busy);
     }
 
-    /** Runs /showmymaps and collects what it printed. */
     private List<String> runStatus() {
         List<String> lines = new ArrayList<>();
         CommandSender sender = mock(CommandSender.class);
@@ -196,12 +177,7 @@ class ShowMyMapsPluginTest {
         return lines;
     }
 
-    /**
-     * The gap that made maps go blank after a portal. A client throws away every map
-     * it knows when its level is rebuilt, but the record of what had been sent lived
-     * until the player quit, so for a whole resend window nothing was sent again and
-     * the player saw blank parchment for art they had been looking at seconds before.
-     */
+    // the client drops every map on a level change, so the sent record must reset too
     @Test
     void mapsAreResentAfterADimensionChange() throws Exception {
         World world = server.addSimpleWorld("world");
@@ -213,7 +189,6 @@ class ShowMyMapsPluginTest {
         sweep(player);
         verify(player).sendMap(view);
 
-        // Nothing has changed, so the resend window still applies.
         sweep(player);
         verify(player, times(1)).sendMap(view);
 
@@ -224,7 +199,6 @@ class ShowMyMapsPluginTest {
         verify(player, times(2)).sendMap(view);
     }
 
-    /** An art wall is item frames, and nothing here used to look at one. */
     @Test
     void mapsInItemFramesNearbyAreSent() throws Exception {
         World world = server.addSimpleWorld("world");
@@ -243,10 +217,6 @@ class ShowMyMapsPluginTest {
         verify(player).sendMap(view);
     }
 
-    /**
-     * A merchant's offers are not in its inventory - they are their own list - so a
-     * villager selling map art showed nothing however long you stared at it.
-     */
     @Test
     void mapsOfferedInMerchantTradesAreSent() throws Exception {
         World world = server.addSimpleWorld("world");
@@ -290,7 +260,6 @@ class ShowMyMapsPluginTest {
         return grid;
     }
 
-    /** A player who is allowed map colours and carries nothing of their own. */
     private Player viewer(World world) {
         Player player = mock(Player.class);
         when(player.isOnline()).thenReturn(true);
@@ -301,7 +270,6 @@ class ShowMyMapsPluginTest {
         when(inventory.getContents()).thenReturn(new ItemStack[0]);
         when(player.getInventory()).thenReturn(inventory);
         when(player.getNearbyEntities(anyDouble(), anyDouble(), anyDouble())).thenReturn(List.of());
-        // Forgetting a player's record queues a sweep on their own scheduler.
         when(player.getScheduler()).thenReturn(mock(EntityScheduler.class));
         return player;
     }

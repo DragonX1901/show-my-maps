@@ -11,11 +11,10 @@ repositories {
 }
 
 dependencies {
-    // Built against the oldest API in the supported range, so one jar runs across it.
-    compileOnly 'io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT'
+    // oldest supported API, so one jar covers the range
+    compileOnly 'io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT'
 
-    // MockBukkit is built against a newer API than the jar targets, so tests get
-    // their own, newer paper-api version rather than the oldest-supported one.
+    // MockBukkit needs a newer API than the jar targets
     testImplementation 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -31,6 +30,11 @@ java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+// 1.20.1-1.20.4 servers run Java 17; tests still run on 21 for MockBukkit
+tasks.named('compileJava') {
+    options.release = 17
 }
 
 tasks.named('jar') {

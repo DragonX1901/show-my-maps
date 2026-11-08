@@ -1,5 +1,6 @@
 package org.dx.showmymaps.paper;
 
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Locale;
@@ -28,6 +29,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantInventory;
 import org.bukkit.inventory.MerchantRecipe;
@@ -39,36 +41,20 @@ import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
 
 /**
- * The server half of SHOW MY MAPS for servers that cannot load a Fabric mod.
- *
- * <p>Minecraft sends a filled map's colours in two cases only: the map sits in a
- * player's own inventory, or it hangs in an item frame the player is near. A map in
- * a chest, in an auction or shop GUI, inside a shulker box or lying on the ground is
- * never sent, so a client has nothing to draw however it renders maps. This walks
- * what each player can currently see and sends those maps to them.
+ * SHOW MY MAPS server half for Bukkit servers. Vanilla only sends colours for maps a player
+ * carries or sees in a nearby frame; this sends the maps in whatever they have open or nearby.
  */
 public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
-    /**
-     * Held by everyone unless an owner takes it away. A server that sells map art,
-     * or hides it behind a rank, revokes this and the previews stop: the colours are
-     * never sent, so there is nothing on the client to draw.
-     */
     public static final String SEE_PERMISSION = "showmymaps.see";
 
-    /**
-     * The mod asks whichever server half is present to name itself, so a client can
-     * tell "this server sends nothing" apart from "this server is behind". The
-     * payload is the version as plain UTF-8, which is what the mod's codec reads.
-     */
+    // the client reads the version as raw UTF-8, same as the Fabric codec
     public static final String PRESENCE_CHANNEL = "show_my_maps:presence";
 
-    /** Map ids already sent to a player, and when, so the same 16 KB is not resent every pass. */
+    // map id -> when it was last sent; a map is 16 KB on the wire
     private final Map<UUID, Map<Integer, Long>> sent = new HashMap<>();
 
-    /** A shulker inside a shulker is legal. A tower of them is somebody being clever. */
     private static final int MAX_NESTING = 4;
 
-    /** How many ids one player's record may hold before stale ones are swept out. */
     private static final int PRUNE_ABOVE = 512;
 
     private long scanIntervalTicks;
@@ -82,7 +68,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     private boolean debug;
     private Set<String> disabledWorlds = Set.of();
 
-    /** Counters behind /showmymaps, so a silent plugin can be told from a quiet server. */
+    // counters behind /showmymaps
     private int scheduled;
     private int sweeps;
     private int mapsSent;
@@ -97,30 +83,22 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         getServer().getMessenger().registerOutgoingPluginChannel(this, PRESENCE_CHANNEL);
         getServer().getPluginManager().registerEvents(this, this);
 
-        // Per-player tasks, so this stays correct on region threaded forks such as
-        // Folia and ShreddedPaper: each pass runs on the thread that owns the player.
+        // per-player tasks keep this correct on region-threaded forks (Folia, ShreddedPaper)
         for (Player player : getServer().getOnlinePlayers()) {
             schedule(player);
         }
     }
 
     /**
-     * Answers the only question an owner has after installing this: is it working?
-     *
-     * <p>"Installed it and nothing changed" has three different causes and they need
-     * three different fixes. No sweeps means the plugin is not running. Sweeps but no
-     * maps sent means it is looking and finding nothing, so either the maps are not
-     * where it looks or the viewer lacks the permission. Maps sent but still blank
-     * means the client half is missing or out of date. This says which.
+     * Tells an owner which half is broken: no sweeps means not running, no maps sent means
+     * nothing found or no permission, maps sent but blank means the client is missing the mod.
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // With nobody on, every counter is zero for the dullest possible reason, and
-        // saying "nothing is running" then would send an owner hunting a bug that is
-        // not there. Ask with a player online.
+        // with nobody online every counter is zero, which is not a fault
         boolean anyone = !getServer().getOnlinePlayers().isEmpty();
 
-        sender.sendMessage("SHOW MY MAPS " + getPluginMeta().getVersion());
+        sender.sendMessage("SHOW MY MAPS " + version());
         sender.sendMessage("  sweeps run:      " + this.sweeps
             + (this.sweeps == 0
                 ? (anyone ? "   <- nothing is running; see the console for errors"
@@ -149,6 +127,33 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         sent.clear();
     }
 
+    // getPluginMeta() is Paper-only and throws on Spigot
+    @SuppressWarnings("deprecation")
+    private String version() {
+        return getDescription().getVersion();
+    }
+
+    // InventoryView became an interface in 1.21, so a direct call breaks on one side or the other
+    private static Inventory topInventory(Player player) {
+        Object view = player.getOpenInventory();
+
+        if (view == null) {
+            return null;
+        }
+
+        try {
+            if (getTopInventory == null) {
+                getTopInventory = InventoryView.class.getMethod("getTopInventory");
+            }
+
+            return (Inventory) getTopInventory.invoke(view);
+        } catch (ReflectiveOperationException e) {
+            return null;
+        }
+    }
+
+    private static volatile Method getTopInventory;
+
     private void readConfig() {
         scanIntervalTicks = Math.max(5, getConfig().getLong("scan-interval-ticks", 20L));
         resendMillis = Math.max(1L, getConfig().getLong("resend-seconds", 60L)) * 1000L;
@@ -164,21 +169,14 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             .collect(Collectors.toUnmodifiableSet());
     }
 
-    /** Whether this player is owed map colours at all. */
     private boolean allowed(Player player) {
         return player.hasPermission(SEE_PERMISSION)
             && !disabledWorlds.contains(player.getWorld().getName().toLowerCase(Locale.ROOT));
     }
 
     /**
-     * A pass per player, on the thread that owns that player, which is what a region
-     * threaded fork such as Folia or ShreddedPaper needs.
-     *
-     * <p>Not every fork carries that scheduler, and one that carries it can still
-     * refuse a task. Either way the old code would have thrown here and left the
-     * plugin loaded, listening, and sweeping nothing at all - the worst outcome, since
-     * it looks exactly like the plugin working and the maps simply not existing. So
-     * fall back to the plain server scheduler and say so once.
+     * Prefers the per-player scheduler; falls back to the global one when a fork lacks it or
+     * refuses the task, instead of loading and silently sweeping nothing.
      */
     private void schedule(Player player) {
         try {
@@ -189,10 +187,8 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         } catch (LinkageError | RuntimeException e) {
             if (!fellBack) {
                 fellBack = true;
-                getLogger().warning("This server's per-player scheduler refused a task ("
-                    + e.getClass().getSimpleName() + "), so map sweeps now run on the main"
-                    + " scheduler instead. Everything still works; on a region threaded"
-                    + " server this is worth reporting.");
+                getLogger().warning("Per-player scheduler refused a task ("
+                    + e.getClass().getSimpleName() + "); using the main scheduler instead");
             }
         }
 
@@ -201,13 +197,11 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         scheduled++;
     }
 
-    /** Runs a one-off job for a player on whichever scheduler this server accepts. */
     private void soon(Player player, Runnable job, long delayTicks) {
         try {
             player.getScheduler().runDelayed(this, task -> job.run(), null, delayTicks);
             return;
         } catch (LinkageError | RuntimeException e) {
-            // Same story as schedule(): fall through rather than lose the job.
         }
 
         getServer().getScheduler().runTaskLater(this, job, delayTicks);
@@ -218,7 +212,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
         schedule(player);
 
-        // A moment after joining, once the client has said which channels it takes.
+        // after the client has registered its channels
         soon(player, () -> announce(player), 20L);
     }
 
@@ -228,7 +222,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         }
 
         player.sendPluginMessage(this, PRESENCE_CHANNEL,
-            getPluginMeta().getVersion().getBytes(StandardCharsets.UTF_8));
+            version().getBytes(StandardCharsets.UTF_8));
     }
 
     @EventHandler
@@ -236,18 +230,12 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         sent.remove(event.getPlayer().getUniqueId());
     }
 
-    /**
-     * A client throws away every map it knows when its level is rebuilt, which is
-     * what a dimension change is. Remembering that we already sent those maps means
-     * not sending them again for a minute, and for that minute the player sees blank
-     * parchment for maps they were looking at seconds earlier. Forget and resend.
-     */
+    // the client drops every map when its level is rebuilt, so forget what was sent and resend
     @EventHandler
     public void onChangedWorld(PlayerChangedWorldEvent event) {
         forget(event.getPlayer());
     }
 
-    /** A respawn rebuilds the level the same way, so it loses the same maps. */
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         forget(event.getPlayer());
@@ -260,11 +248,9 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             getLogger().info("[debug] " + player.getName() + " changed level; resending on the next pass");
         }
 
-        // Far enough after the switch that the client has its new level to put them in.
         soon(player, () -> sweep(player), 20L);
     }
 
-    /** A GUI's first page is worth sending before the next scheduled pass. */
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onOpen(InventoryOpenEvent event) {
         if (event.getPlayer() instanceof Player player && allowed(player)) {
@@ -272,7 +258,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    /** Clicking a plugin GUI usually turns the page, which swaps every item in it. */
+    // plugin GUIs usually turn the page on click
     @EventHandler(priority = EventPriority.MONITOR)
     public void onClick(InventoryClickEvent event) {
         if (event.getWhoClicked() instanceof Player player && allowed(player)) {
@@ -288,24 +274,19 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         this.sweeps++;
 
         if (openContainers) {
-            Inventory top = player.getOpenInventory().getTopInventory();
+            Inventory top = topInventory(player);
 
-            // With nothing else open, the "top" inventory is the player's own 2x2
-            // crafting grid. An ender chest's holder is the owning Player too, so
-            // that used to read as "nothing open" and skip it; check the inventory
-            // type instead, which tells the two apart correctly.
-            if (top.getType() != InventoryType.CRAFTING) {
+            // CRAFTING is the player's own grid; an ender chest's holder is also the player, so check the type
+            if (top != null && top.getType() != InventoryType.CRAFTING) {
                 sendAll(player, top.getContents());
             }
 
-            // A merchant's trades are not in its inventory: the offers are their own
-            // list, drawn by the client from the trade packet. A villager shop that
-            // sells map art shows nothing without this.
+            // trades live in their own list, not the merchant inventory
             if (merchantTrades && top instanceof MerchantInventory merchant) {
                 sendTrades(player, merchant);
             }
 
-            send(player, player.getOpenInventory().getCursor());
+            send(player, player.getItemOnCursor());
         }
 
         if (shulkerContents) {
@@ -321,13 +302,8 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    /**
-     * Maps an entity is showing rather than holding. Vanilla syncs a map in an item
-     * frame only as the frame enters tracking range, so a wall the player was already
-     * standing at, or one built while they watched, can leave gaps. Armour stands and
-     * display entities are never synced at all, and both are ordinary ways to build a
-     * shop front.
-     */
+    // vanilla only syncs frame maps as the frame enters tracking range, and never syncs
+    // armour stands or display entities
     private void sendCarriedBy(Player player, Entity entity) {
         if (nearbyItems && entity instanceof Item item) {
             send(player, item.getItemStack());
@@ -339,7 +315,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         }
 
         if (entity instanceof ItemFrame frame) {
-            // Covers glow frames too, which are the same class.
+            // glow frames included
             send(player, frame.getItem());
         } else if (entity instanceof ItemDisplay display) {
             send(player, display.getItemStack());
@@ -374,19 +350,13 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         }
     }
 
-    /**
-     * Maps packed inside a shulker box or a bundle, which nothing ever syncs. Recurses,
-     * because a bundle of maps inside a shulker box is a normal way to carry art and
-     * one level of unpacking used to stop at the box.
-     */
+    // shulker boxes and bundles, nested; nothing else ever syncs these
     private void sendNested(Player player, ItemStack holder, int depth) {
         if (holder == null || holder.getType().isAir() || depth >= MAX_NESTING) {
             return;
         }
 
-        // hasItemMeta() is false for a stack whose meta has nothing beyond the
-        // material's defaults, which is exactly the common case for a shulker box
-        // or bundle: get the meta unconditionally instead of gating on that flag.
+        // hasItemMeta() is false for a default-meta box, so do not gate on it
         ItemMeta meta = holder.getItemMeta();
 
         if (meta instanceof BlockStateMeta blockState
@@ -405,9 +375,7 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
     }
 
     private void send(Player player, ItemStack stack) {
-        // hasItemMeta() is false for a plain filled map with nothing set beyond the
-        // map id itself, which is the common case, so it can't gate this: get the
-        // meta unconditionally and let the instanceof check decide.
+        // hasItemMeta() is false for a plain map, so do not gate on it
         if (stack == null || !(stack.getItemMeta() instanceof MapMeta meta) || !meta.hasMapView()) {
             return;
         }
@@ -415,14 +383,11 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
         MapView view = meta.getMapView();
 
         if (view == null) {
-            // The stack names a map this server has no data for. A plugin drawing its
-            // own maps straight to packets does this, and nothing here can help - but
-            // it is the one silent failure worth being able to see.
+            // a plugin drew this map straight to packets; nothing here can resolve it
             this.unresolved++;
 
             if (debug) {
-                getLogger().warning("[debug] a stack carries a map id this server cannot resolve;"
-                    + " whichever plugin made it is not backing it with map data");
+                getLogger().warning("[debug] stack names a map id with no map data behind it");
             }
 
             return;
@@ -436,8 +401,6 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
             return;
         }
 
-        // Without this the record grows for as long as a player stays connected, and
-        // on a shop server that is thousands of ids nobody will look at again.
         if (seen.size() > PRUNE_ABOVE) {
             seen.values().removeIf(when -> now - when >= resendMillis);
         }
