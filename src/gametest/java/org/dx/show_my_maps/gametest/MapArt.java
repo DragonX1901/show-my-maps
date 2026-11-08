@@ -6,22 +6,14 @@ import net.minecraft.world.level.material.MapColor;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
-/**
- * Paints a picture straight into a map's colour bytes, so screenshots show real
- * map art instead of whatever terrain the test world happened to generate. Drawn
- * here rather than borrowed from someone's build, which would be their work.
- */
+/** Paints original art into a map's colours so screenshots show more than test terrain. */
 public final class MapArt {
     private static final int SIZE = 128;
 
     private MapArt() {
     }
 
-    /**
-     * A treasure-map look: ocean, island, mountains, and a marked spot. Writes through
-     * updateColor so the change is flagged for sending, then locks the map so nothing
-     * repaints terrain over it.
-     */
+    /** Treasure map. Locked afterwards so nothing repaints terrain over it. */
     public static void paintIsland(ServerLevel level, MapId mapId) {
         MapItemSavedData data = MapItem.getSavedData(mapId, level);
 
@@ -35,7 +27,6 @@ public final class MapArt {
             }
         }
 
-        // Locked maps are left alone by the mod, so the art survives.
         level.setMapData(mapId, data.locked());
     }
 
@@ -44,10 +35,8 @@ public final class MapArt {
         double dy = (y - 66) / 44.0;
         double coast = Math.sqrt(dx * dx + dy * dy);
 
-        // Wobble the coastline so it does not read as a plain ellipse.
         coast += 0.11 * Math.sin(Math.atan2(dy, dx) * 5.0) + 0.05 * Math.sin(Math.atan2(dy, dx) * 11.0);
 
-        // The marked spot, north-east of centre.
         double mark = Math.max(Math.abs(x - 88) - Math.abs(y - 52), Math.abs(y - 52) - Math.abs(x - 88));
 
         if (coast < 1.0 && Math.abs(Math.abs(x - 88) - Math.abs(y - 52)) < 3 && mark > -12) {

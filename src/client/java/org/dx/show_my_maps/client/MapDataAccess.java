@@ -6,11 +6,7 @@ import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Single lookup for every preview: what the server has sent this session, falling
- * back to what we saw on an earlier one, and failing that asking whatever art source
- * the player pointed at this server.
- */
+/** Every preview's lookup: this session, then the disk cache, then the art source. */
 public final class MapDataAccess {
     private MapDataAccess() {
     }
@@ -22,7 +18,7 @@ public final class MapDataAccess {
             return null;
         }
 
-        MapItemSavedData data = level.getMapData(mapId);
+        MapItemSavedData data = loaded(level, mapId);
 
         if (data != null) {
             return data;
@@ -31,11 +27,26 @@ public final class MapDataAccess {
         data = MapDataCache.restore(level, mapId);
 
         if (data == null) {
-            // Nothing anywhere. Ask the source, which answers on a later frame by
-            // writing the cache file this same call will find next time round.
+            // the source answers on a later frame by writing the cache file
             MapArtSource.request(mapId);
         }
 
         return data;
+    }
+
+    public static @Nullable MapItemSavedData loaded(ClientLevel level, MapId mapId) {
+        //? if >=1.20.5 {
+        return level.getMapData(mapId);
+        //?} else {
+        /*return level.getMapData(mapId.key());
+        *///?}
+    }
+
+    public static void put(ClientLevel level, MapId mapId, MapItemSavedData data) {
+        //? if >=1.20.5 {
+        level.overrideMapData(mapId, data);
+        //?} else {
+        /*level.overrideMapData(mapId.key(), data);
+        *///?}
     }
 }

@@ -10,26 +10,18 @@ import java.nio.file.Path;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Mth;
 
-/**
- * Server-side settings, stored in {@code config/show_my_maps_server.json}. These
- * decide which maps the server bothers to paint and send, so they only take effect
- * on a singleplayer world, a LAN host, or a server running this mod.
- */
+/** Server settings in {@code config/show_my_maps_server.json}; only matter where this mod runs server side. */
 public class ShowMyMapsServerConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("show_my_maps_server.json");
 
     private static ShowMyMapsServerConfig instance;
 
-    /** Paint maps sitting in a player's inventory, not only the one in their hand. */
     public boolean paintCarriedMaps = true;
-    /** Ticks between painting passes for a carried map. Vanilla paints a held map every tick. */
+    // vanilla paints a held map every tick
     public int carriedPaintInterval = 4;
-    /** Send map colours for maps in a container the player has open. */
     public boolean syncContainerMaps = true;
-    /** Paint those container maps too, when the player stands inside the mapped area. */
     public boolean paintContainerMaps = true;
-    /** Ticks between container sync passes. */
     public int containerSyncInterval = 10;
 
     public static ShowMyMapsServerConfig get() {

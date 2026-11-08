@@ -9,19 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * A respawn packet - which is what a dimension change and a death both are - throws
- * the client's level away and builds a new one, taking every map it knew with it.
- *
- * <p>The cache writes in batches off a timer, so a map that arrived in the seconds
- * before the switch was still only a pending id: by the time the batch ran, the level
- * it would have read the colours from no longer existed, and the map was quietly lost
- * from disk as well as from memory. Walk through a portal just after opening a shop
- * page and the art you had been looking at came back blank and stayed blank.
- *
- * <p>So write the batch out here, at the head of the packet, while the old level is
- * still standing.
- */
+/** Flushes the cache before a respawn discards the level, or maps since the last timed flush are lost. */
 @Mixin(ClientPacketListener.class)
 public class LevelSwapMixin {
     @Inject(method = "handleRespawn", at = @At("HEAD"))

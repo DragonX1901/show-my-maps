@@ -8,42 +8,29 @@ import org.dx.show_my_maps.ShowMyMapsPresence;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * A vanilla server only sends a map's colours while that map sits in a player's own
- * inventory, or hangs in an item frame nearby, so on a server without a server half
- * the previews for chests, shulker boxes and dropped maps have nothing to draw. That
- * reads as a broken mod, so find out which kind of server this is and say so once.
- *
- * <p>Either half — the Fabric mod or the Paper plugin — announces itself on joining
- * and names its version, so an old one on the far end is worth saying out loud too.
+ * Works out whether this server runs a server half (Fabric mod or Paper plugin) and tells the
+ * player once if it does not, or if it is outdated, since blank previews otherwise look like a bug.
  */
 public final class ServerSupport {
-    /**
-     * The oldest server half this client is happy with. 1.0.3 is where a server
-     * half started naming itself at all, so anything older cannot be told apart from
-     * nothing being installed. Older ones still send maps; they are behind on the
-     * fixes, and the player is the only one who can pass that on to whoever runs it.
-     */
+    // 1.0.3 is the first server half that announces itself
     public static final int[] REQUIRED_VERSION = {1, 0, 3};
 
-    /** The announcement arrives with the join packets, a moment after the join event. */
     private static final int CHECK_DELAY_TICKS = 60;
 
     private static int countdown;
-    /** Assumed until the check runs, so nothing flickers a wrong reason at the player. */
+    // assumed true until the check runs, so no wrong reason flickers up
     private static boolean serverHasMod = true;
     private static @Nullable String serverVersion;
-    /** Deliberately survives a reconnect: a proxy hands you a new join per backend. */
+    // survives reconnects: a proxy sends a new join per backend
     private static boolean noticed;
 
     private ServerSupport() {
     }
 
-    /** False only once the check has run and found a server that cannot push those maps. */
     public static boolean serverHasMod() {
         return serverHasMod;
     }
 
-    /** What the far end calls itself, once it has said so. */
     public static @Nullable String serverVersion() {
         return serverVersion;
     }
@@ -60,7 +47,6 @@ public final class ServerSupport {
         serverVersion = null;
     }
 
-    /** The server half introducing itself. Cancels the "nobody is home" check. */
     public static void announced(Minecraft minecraft, String version) {
         serverHasMod = true;
         serverVersion = version;
@@ -80,7 +66,6 @@ public final class ServerSupport {
             return;
         }
 
-        // A world we host ourselves always has it, and nobody needs telling.
         serverHasMod = minecraft.hasSingleplayerServer();
 
         if (serverHasMod || minecraft.player == null || noticed || !ShowMyMapsConfig.get().serverNotice) {
@@ -91,11 +76,7 @@ public final class ServerSupport {
         say(minecraft, Component.translatable("chat.show_my_maps.server_missing"));
     }
 
-    /**
-     * The version, when it is older than this client asks for, or null when it is
-     * new enough or unreadable. An unreadable one is left alone: a fork with its own
-     * numbering is not the player's problem to report.
-     */
+    /** The parsed version when older than required, else null. Unreadable versions (forks) are left alone. */
     static @Nullable int[] outdated(String version) {
         int[] parts = parse(version);
 
@@ -112,7 +93,7 @@ public final class ServerSupport {
         return null;
     }
 
-    /** Reads the leading {@code major.minor.patch}, ignoring any {@code +1.21.11} tail. */
+    /** Leading major.minor.patch, ignoring any +1.21.11 tail. */
     static @Nullable int[] parse(String version) {
         String[] fields = version.split("[+\\-]", 2)[0].split("\\.");
 
@@ -150,9 +131,16 @@ public final class ServerSupport {
         //?}
     }
 
-    /** Registered once, at client start up. */
     public static void listen() {
+        //? if >=1.20.5 {
         ClientPlayNetworking.registerGlobalReceiver(ShowMyMapsPresence.TYPE,
             (payload, context) -> announced(context.client(), payload.version()));
+        //?} else {
+        /*// this API runs on the network thread: read the buffer here, act on the client thread
+        ClientPlayNetworking.registerGlobalReceiver(ShowMyMapsPresence.ID, (client, handler, buffer, responder) -> {
+            String version = ShowMyMapsPresence.read(buffer).version();
+            client.execute(() -> announced(client, version));
+        });
+        *///?}
     }
 }

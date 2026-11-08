@@ -28,16 +28,10 @@ import org.dx.show_my_maps.client.MapDataCache;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 
 /**
- * The art source in full: map ids this client has never been sent, a host that has
- * the pictures, and previews that fill in. Runs against a real HTTP server on
- * loopback, because the point of the feature is the round trip.
- *
- * <p>All three shapes a source may answer in are covered - the mod's own cache file,
- * a bare colour array and a PNG - along with the two refusals that matter: a body far
- * too big to be a map, and a map the source's own manifest disagrees with.
+ * Art source round trip against a loopback HTTP server: all three file shapes, plus the
+ * oversized-body and manifest-mismatch refusals.
  */
 public class MapArtSourceTest implements FabricClientGameTest {
-    /** Ids nothing in the world uses, so only a fetch can satisfy them. */
     private static final int AS_CACHE_FILE = 31337;
     private static final int AS_RAW_COLOURS = 31338;
     private static final int AS_PNG = 31339;
@@ -49,7 +43,7 @@ public class MapArtSourceTest implements FabricClientGameTest {
     private static final byte CACHE_COLOUR = 34;
     private static final byte RAW_COLOUR = 51;
 
-    /** A packed id with a real colour behind it, so the PNG can round trip exactly. */
+    // a packed id with a real colour, so the PNG round trips exactly
     private static final byte PNG_COLOUR = 61;
 
     private static final int COLOURS = 128 * 128;
@@ -96,7 +90,7 @@ public class MapArtSourceTest implements FabricClientGameTest {
             config.strictPreviews = false;
             config.externalArt = true;
             config.artSources.put(MapDataCache.serverKey(), base);
-            // The session was opened on join, before any of this was set.
+            // the session opened on join, before this was set
             MapArtSource.beginSession();
         });
     }
@@ -121,7 +115,6 @@ public class MapArtSourceTest implements FabricClientGameTest {
             }
         }
 
-        // The cache remembers which ids it looked for and failed to find.
         context.runOnClient(minecraft -> {
             for (int id : ids) {
                 MapDataCache.forget(new MapId(id));
@@ -155,7 +148,6 @@ public class MapArtSourceTest implements FabricClientGameTest {
         }
     }
 
-    /** The file on disk has to say it is a guess, or nothing downstream can tell. */
     private static void assertMarkedAsAGuess(ClientGameTestContext context, int id) {
         Path file = context.computeOnClient(minecraft -> MapDataCache.cacheFile(new MapId(id)));
 
@@ -182,17 +174,13 @@ public class MapArtSourceTest implements FabricClientGameTest {
         }
     }
 
-    /**
-     * Strict previews mean "only what this server actually sent", and a picture off a
-     * web host is the clearest possible case of something it did not.
-     */
     private static void assertStrictPreviewsRefuseIt(ClientGameTestContext context, int id) {
         MapItemSavedData under = context.computeOnClient(minecraft -> {
             ShowMyMapsConfig config = ShowMyMapsConfig.get();
             config.strictPreviews = true;
 
             try {
-                // Straight at the cache: the level still holds the map from the fetch.
+                // the level still holds the fetched map, so ask the cache directly
                 return MapDataCache.restore(minecraft.level, new MapId(id));
             } finally {
                 config.strictPreviews = false;
@@ -205,7 +193,6 @@ public class MapArtSourceTest implements FabricClientGameTest {
     }
 
     private static void assertNeverFetched(ClientGameTestContext context, int id, String complaint) {
-        // Long enough for a fetch to have finished had one been going to.
         context.waitTicks(60);
 
         MapItemSavedData data = context.computeOnClient(minecraft -> MapDataAccess.find(new MapId(id)));
@@ -215,7 +202,7 @@ public class MapArtSourceTest implements FabricClientGameTest {
         }
     }
 
-    /** The fetch is off the render thread, so poll rather than assume a tick count. */
+    // the fetch is off-thread, so poll
     private static MapItemSavedData waitForFetch(ClientGameTestContext context, int id) {
         for (int attempt = 0; attempt < 40; attempt++) {
             MapItemSavedData data = context.computeOnClient(minecraft -> MapDataAccess.find(new MapId(id)));
@@ -230,7 +217,6 @@ public class MapArtSourceTest implements FabricClientGameTest {
         return null;
     }
 
-    // ------------------------------------------------------------- the stub host
 
     private static HttpServer start() {
         try {
@@ -266,11 +252,7 @@ public class MapArtSourceTest implements FabricClientGameTest {
         }
     }
 
-    /**
-     * Names the ids this host publishes. {@code MANIFEST_DISAGREES} is listed with a
-     * digest of colours other than the ones it serves, and {@code NOT_PUBLISHED} is
-     * left out entirely, so both refusals are exercised.
-     */
+    // MANIFEST_DISAGREES is listed with the wrong digest; NOT_PUBLISHED is left out
     private static byte[] manifest() {
         HexFormat hex = HexFormat.of();
         String json = "{\"maps\":{"
@@ -293,13 +275,11 @@ public class MapArtSourceTest implements FabricClientGameTest {
         return colours;
     }
 
-    /** The same bytes {@link MapDataCache} writes, so the client can read them back. */
     private static byte[] cacheFile() throws IOException {
         ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
         try (DataOutputStream data = new DataOutputStream(bytes)) {
             data.writeInt(2);
-            // A published file claiming to be trusted must not be believed.
             data.writeByte(MapDataCache.FROM_SERVER);
             data.writeByte(SCALE);
             data.writeBoolean(false);
@@ -310,10 +290,7 @@ public class MapArtSourceTest implements FabricClientGameTest {
         return bytes.toByteArray();
     }
 
-    /**
-     * A 128 by 128 RGB PNG of one colour, built here rather than checked in, so what
-     * the decoder is fed is exactly what a tool would produce from map colours.
-     */
+    // built here so the decoder sees exactly what a tool would write
     private static byte[] png(byte packedColour) throws IOException {
         int argb = MapColor.getColorFromPackedId(packedColour & 0xFF);
 
@@ -325,7 +302,6 @@ public class MapArtSourceTest implements FabricClientGameTest {
         byte green = (byte) (argb >> 8);
         byte blue = (byte) argb;
 
-        // One filter byte per row, then 128 RGB triples.
         byte[] scanlines = new byte[128 * (1 + 128 * 3)];
 
         for (int row = 0; row < 128; row++) {
@@ -346,7 +322,7 @@ public class MapArtSourceTest implements FabricClientGameTest {
             out.writeInt(128);
             out.writeInt(128);
             out.writeByte(8);
-            // Colour type 2: RGB, no alpha.
+            // colour type 2: RGB
             out.writeByte(2);
             out.writeByte(0);
             out.writeByte(0);

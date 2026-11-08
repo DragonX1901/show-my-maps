@@ -22,23 +22,8 @@ import org.dx.show_my_maps.client.MapDataAccess;
 import org.dx.show_my_maps.client.MapDataCache;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 
-/**
- * A menu full of maps draws blank until their colours turn up, and on a server that
- * sends them late - because you walked past the frame that holds them, or because a
- * server half swept a beat after the window opened - they turn up while the player is
- * still looking at the screen.
- *
- * <p>The question this settles is whether the slot picks that up on its own. The mod
- * tells the player to reopen the menu, and if that advice is needed then a menu that
- * has already drawn blank stays blank for as long as it is open, which reads exactly
- * like the mod not working at all.
- *
- * <p>So: put a map with no colours in a slot, open the screen, prove it draws blank,
- * then hand the colours over without touching the screen and prove the same open
- * screen now draws them.
- */
+/** A menu that drew a map blank must pick up its colours while still open, without a reopen. */
 public class LateArrivalTest implements FabricClientGameTest {
-    /** An id nothing in the world uses, so only this test can satisfy it. */
     private static final int UNSENT = 51337;
     private static final int SLOT = 9;
     private static final byte COLOUR = 76;
@@ -57,8 +42,6 @@ public class LateArrivalTest implements FabricClientGameTest {
                 config.cacheMapData = false;
             });
 
-            // A filled map naming colours nobody has. Put it straight into the client
-            // inventory, which is what a menu slot amounts to for the renderer.
             context.runOnClient(minecraft -> {
                 ItemStack stack = new ItemStack(Items.FILLED_MAP);
                 stack.set(DataComponents.MAP_ID, new MapId(UNSENT));
@@ -78,8 +61,6 @@ public class LateArrivalTest implements FabricClientGameTest {
 
             context.takeScreenshot("late_arrival_before");
 
-            // The colours turn up, with the screen left exactly as it is. No reopen,
-            // no click, nothing the player does.
             context.runOnClient(minecraft -> {
                 //? if >=1.21.9 {
                 ResourceKey<Level> overworld = ResourceKey.create(Registries.DIMENSION, Identifier.parse("minecraft:overworld"));
@@ -106,8 +87,7 @@ public class LateArrivalTest implements FabricClientGameTest {
                 }
             }
 
-            // The screen has to still be the one opened before the colours arrived,
-            // or this proves nothing about an open menu.
+            // must still be the screen opened before the colours arrived
             boolean sameScreen = context.computeOnClient(minecraft -> minecraft.screen instanceof InventoryScreen);
 
             if (!sameScreen) {

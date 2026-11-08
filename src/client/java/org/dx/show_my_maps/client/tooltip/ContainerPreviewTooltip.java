@@ -9,23 +9,32 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 //?}
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-//? if >=1.21.9 {
+//? if >=1.21.6 {
 import net.minecraft.client.renderer.RenderPipelines;
+//?} elif >=1.21.2 {
+/*import net.minecraft.client.renderer.RenderType;
+*///?}
+//? if >=1.21.9 {
 import net.minecraft.resources.Identifier;
 //?} else {
 /*import net.minecraft.resources.ResourceLocation;
 *///?}
 import net.minecraft.world.item.ItemStack;
 
-/**
- * A slot grid of what is inside the box. Maps in those slots go through the normal
- * item renderer, so icon mode paints them as art here too.
- */
+/** A slot grid of a container item's contents. Maps go through the item renderer, so they draw as art. */
 public class ContainerPreviewTooltip implements ClientTooltipComponent {
     //? if >=1.21.9 {
     private static final Identifier SLOT_SPRITE = Identifier.withDefaultNamespace("container/bundle/slot_background");
-    //?} else {
+    //?} elif >=1.21.2 {
     /*private static final ResourceLocation SLOT_SPRITE = ResourceLocation.withDefaultNamespace("container/bundle/slot_background");
+    *///?} elif >=1.21 {
+    /*// renamed to slot_background in 1.21.2
+    private static final ResourceLocation SLOT_SPRITE = ResourceLocation.withDefaultNamespace("container/bundle/slot");
+    *///?} elif >=1.20.2 {
+    /*private static final ResourceLocation SLOT_SPRITE = new ResourceLocation("minecraft", "container/bundle/slot");
+    *///?} else {
+    /*// no GUI sprite atlas yet: a region of the bundle sheet
+    private static final ResourceLocation SLOT_SPRITE = new ResourceLocation("minecraft", "textures/gui/container/bundle.png");
     *///?}
     private static final int SLOT = 18;
     private static final int COLUMNS = 9;
@@ -41,7 +50,7 @@ public class ContainerPreviewTooltip implements ClientTooltipComponent {
         return Math.min(this.items.size(), COLUMNS) * SLOT;
     }
 
-    //? if >=1.21.9 {
+    //? if >=1.21.2 {
     @Override
     public int getHeight(Font font) {
         return rows() * SLOT;
@@ -59,7 +68,7 @@ public class ContainerPreviewTooltip implements ClientTooltipComponent {
     public void extractImage(Font font, int x, int y, int width, int height, GuiGraphicsExtractor graphics) {
         draw(x, y, graphics);
     }
-    *///?} elif >=1.21.9 {
+    *///?} elif >=1.21.2 {
     @Override
     public void renderImage(Font font, int x, int y, int width, int height, GuiGraphics graphics) {
         draw(x, y, graphics);
@@ -100,10 +109,14 @@ public class ContainerPreviewTooltip implements ClientTooltipComponent {
         for (int index = 0; index < this.items.size(); index++) {
             int slotX = x + index % COLUMNS * SLOT;
             int slotY = y + index / COLUMNS * SLOT;
-            //? if >=1.21.9 {
+            //? if >=1.21.6 {
             graphics.blitSprite(RenderPipelines.GUI_TEXTURED, SLOT_SPRITE, slotX, slotY, SLOT, SLOT);
-            //?} else {
+            //?} elif >=1.21.2 {
+            /*graphics.blitSprite(RenderType::guiTextured, SLOT_SPRITE, slotX, slotY, SLOT, SLOT);
+            *///?} elif >=1.20.2 {
             /*graphics.blitSprite(SLOT_SPRITE, slotX, slotY, SLOT, SLOT);
+            *///?} else {
+            /*graphics.blit(SLOT_SPRITE, slotX, slotY, 0, 0, SLOT, SLOT, 128, 128);
             *///?}
 
             ItemStack stack = this.items.get(index);

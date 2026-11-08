@@ -15,17 +15,13 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * Vanilla paints a map only while it sits in a hand, so a map you pick up and
- * pocket stays blank. Paint it in the inventory too, otherwise there is nothing
- * for the tooltip to show.
- */
+/** Paints carried maps, not only held ones, so the tooltip has something to show. */
 @Mixin(MapItem.class)
 public abstract class MapItemCarriedUpdateMixin {
     @Shadow
     public abstract void update(net.minecraft.world.level.Level level, Entity entity, MapItemSavedData data);
 
-    //? if >=1.21.9 {
+    //? if >=1.21.5 {
     @Inject(method = "inventoryTick", at = @At("TAIL"))
     private void show_my_maps$paintCarried(ItemStack stack, ServerLevel level, Entity entity, @Nullable EquipmentSlot slot, CallbackInfo ci) {
         if (slot != null && slot.getType() == EquipmentSlot.Type.HAND) {
@@ -37,7 +33,7 @@ public abstract class MapItemCarriedUpdateMixin {
     //?} else {
     /*@Inject(method = "inventoryTick", at = @At("TAIL"))
     private void show_my_maps$paintCarried(ItemStack stack, net.minecraft.world.level.Level level, Entity entity, int slotId, boolean selected, CallbackInfo ci) {
-        // Vanilla already painted the selected stack, and the offhand one.
+        // vanilla already painted the selected and offhand stacks
         if (selected || level.isClientSide()) {
             return;
         }

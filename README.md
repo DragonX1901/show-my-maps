@@ -95,7 +95,7 @@ held, and maps in an open container get sent.
 Download the **Paper** file from the [Modrinth versions tab](https://modrinth.com/mod/show-my-maps/versions)
 and drop it in `plugins/` instead — it sends map colours for maps in whatever inventory a player
 has open, chests and auction pages included, plus shulker box contents and maps lying nearby. One
-jar covers 1.21.1 through 26.2. Keep the Fabric mod on your client.
+jar covers 1.20.1 through 26.3, on Java 17 and up. Keep the Fabric mod on your client.
 
 It also covers the places maps hide that are not inventories at all: item frames and glow frames
 (`nearby-displays`), armour stands and display entities, and a villager or wandering trader's
@@ -143,7 +143,24 @@ can supply those.
 ## Requirements
 
 The mod needs Fabric Loader and Fabric API, and is client side; a client-only install works, with
-the limits above. The Paper plugin needs neither and goes on the server on its own.
+the limits above.
+
+| Jar | Game versions |
+| --- | --- |
+| 1.20.1 | 1.20, 1.20.1 |
+| 1.20.4 | 1.20.3, 1.20.4 |
+| 1.20.6 | 1.20.5, 1.20.6 |
+| 1.21.1 | 1.21, 1.21.1 |
+| 1.21.3 | 1.21.2, 1.21.3 |
+| 1.21.4 | 1.21.4 |
+| 1.21.5 | 1.21.5 |
+| 1.21.8 | 1.21.6 – 1.21.8 |
+| 1.21.11 | 1.21.9 – 1.21.11 |
+| 26.1.2 | 26.1 – 26.1.2 |
+| 26.2 | 26.2 |
+| 26.3 | 26.3 |
+
+The Paper plugin needs neither and goes on the server on its own.
 
 Downloads on [Modrinth](https://modrinth.com/mod/show-my-maps).
 

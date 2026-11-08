@@ -9,26 +9,11 @@ import net.minecraft.world.level.material.MapColor;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Turns whatever an art source hands back into the 16 KB of map colours the game
- * draws from. Three shapes are understood, because a server owner publishing their
- * maps should not have to care which tool made them:
- *
- * <ul>
- *   <li>the cache format this mod writes, which the exporter also emits;</li>
- *   <li>a bare 16384-byte dump of the colour array, straight out of a map's NBT;</li>
- *   <li>a 128 by 128 PNG, which is what any image tool will give you.</li>
- * </ul>
- *
- * <p>Nothing here trusts the bytes. A file cannot declare itself genuine: the trust
- * byte in a fetched cache file is read past and thrown away, because provenance is
- * decided by where the bytes came from, not by what they claim about themselves.
- *
- * <p>The PNG reader is deliberately small and hand-rolled. ImageIO drags AWT into a
- * game process, and Minecraft's own {@code NativeImage} changed shape across the
- * versions this mod spans; a hundred lines of inflate-and-unfilter does neither.
+ * Decodes art-source bytes into map colours: the mod's cache format, a bare 16384-byte
+ * colour array, or a 128x128 PNG. The PNG reader is hand-rolled because ImageIO pulls in
+ * AWT and NativeImage changed across the supported versions.
  */
 public final class MapArtFormat {
-    /** A map picture is 128 by 128, and every source has to agree on that. */
     private static final int SIZE = MapPreviewRenderer.MAP_SIZE;
     private static final int COLOUR_COUNT = MapDataCache.COLOUR_COUNT;
 
@@ -36,24 +21,19 @@ public final class MapArtFormat {
 
     private static final String DEFAULT_DIMENSION = "minecraft:overworld";
 
-    /** Packed colour id to ARGB, built once. A transparent entry means no such colour. */
+    // packed colour id -> ARGB; transparent means no such colour
     private static int @Nullable [] palette;
 
     private MapArtFormat() {
     }
 
-    /** A decoded map, ready for {@link MapDataCache#writeFromSource}. */
     public record Art(byte scale, boolean locked, String dimension, byte[] colours) {
     }
 
-    /**
-     * @throws IOException when the bytes are not a map in any shape we read. Callers
-     *     treat that the same as a failed request: the source gets a cooldown.
-     */
+    /** @throws IOException when the bytes are no map shape we read; the source gets a cooldown. */
     public static Art decode(byte[] body) throws IOException {
         if (body.length == COLOUR_COUNT) {
-            // A raw colour array carries no scale or dimension of its own. Neither
-            // affects the picture, so sane defaults cost nothing.
+            // a raw array has no scale or dimension, and neither affects the picture
             return new Art((byte) 0, false, DEFAULT_DIMENSION, body);
         }
 
@@ -78,7 +58,6 @@ public final class MapArtFormat {
         return true;
     }
 
-    /** The layout {@link MapDataCache} writes, in either of its two versions. */
     private static Art fromCacheFile(byte[] body) throws IOException {
         try (DataInputStream data = new DataInputStream(new java.io.ByteArrayInputStream(body))) {
             int format = data.readInt();
@@ -88,7 +67,7 @@ public final class MapArtFormat {
             }
 
             if (format == 2) {
-                // The trust byte. Read past it: a file does not get to vouch for itself.
+                // trust byte: a file does not get to vouch for itself
                 data.readByte();
             }
 
@@ -101,7 +80,6 @@ public final class MapArtFormat {
         }
     }
 
-    // ---------------------------------------------------------------- PNG
 
     private static byte[] fromPng(byte[] body) throws IOException {
         DataInputStream in = new DataInputStream(new java.io.ByteArrayInputStream(body));
@@ -135,8 +113,7 @@ public final class MapArtFormat {
                 in.skipBytes(length);
             }
 
-            // The trailing CRC. The transport already checksums, and a corrupt image
-            // fails the palette match below anyway.
+            // CRC skipped: a corrupt image fails the palette match anyway
             in.skipBytes(4);
         }
 
@@ -148,7 +125,7 @@ public final class MapArtFormat {
         return toColours(pixels, bytesPerPixel);
     }
 
-    /** Reads IHDR and returns the bytes per pixel, rejecting anything exotic. */
+    /** Reads IHDR and returns bytes per pixel. */
     private static int readHeader(DataInputStream in, int length) throws IOException {
         if (length != 13) {
             throw new IOException("PNG header is " + length + " bytes");
@@ -178,7 +155,7 @@ public final class MapArtFormat {
     }
 
     private static byte[] inflate(byte[] deflated, int bytesPerPixel) throws IOException {
-        // One filter byte per scanline, on top of the pixels themselves.
+        // plus one filter byte per scanline
         byte[] out = new byte[SIZE * (SIZE * bytesPerPixel + 1)];
         Inflater inflater = new Inflater();
 
@@ -208,7 +185,6 @@ public final class MapArtFormat {
         }
     }
 
-    /** Undoes the per-scanline filters, leaving a plain top-to-bottom pixel array. */
     private static byte[] unfilter(byte[] raw, int bytesPerPixel) throws IOException {
         int stride = SIZE * bytesPerPixel;
         byte[] out = new byte[SIZE * stride];
@@ -262,7 +238,7 @@ public final class MapArtFormat {
             int alpha = bytesPerPixel == 4 ? pixels[at + 3] & 0xFF : 0xFF;
 
             if (alpha < 0x80) {
-                // Transparent, which on a map means "nothing was ever drawn here".
+                // transparent: nothing was ever drawn here
                 colours[i] = 0;
                 continue;
             }
@@ -276,11 +252,7 @@ public final class MapArtFormat {
         return colours;
     }
 
-    /**
-     * A PNG that came from map colours in the first place hits an entry exactly. One
-     * that has been through a resize or a lossy round trip will not, so fall back to
-     * the closest entry rather than refusing the whole picture.
-     */
+    // resized or lossy PNGs miss exact entries, so fall back to the nearest colour
     private static int nearest(int[] table, int red, int green, int blue) {
         int best = 0;
         int bestDistance = Integer.MAX_VALUE;
@@ -288,7 +260,6 @@ public final class MapArtFormat {
         for (int index = 4; index < table.length; index++) {
             int packed = table[index];
 
-            // Fully transparent means the game has no colour under that id at all.
             if ((packed >>> 24) == 0) {
                 continue;
             }
@@ -318,8 +289,6 @@ public final class MapArtFormat {
             existing = new int[256];
 
             for (int index = 0; index < existing.length; index++) {
-                // Opaque for a real colour, fully transparent for an id with none,
-                // which is how the search below tells the two apart.
                 existing[index] = MapColor.getColorFromPackedId(index);
             }
 

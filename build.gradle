@@ -1,6 +1,4 @@
-// Loom is loaded through buildscript rather than the plugins block, because each
-// version needs its own Loom: 26.x only works on the alphas that understand an
-// unobfuscated Minecraft.
+// buildscript, not plugins {}: each version needs its own Loom, and 26.x needs the alphas
 buildscript {
     repositories {
         maven { url = "https://maven.fabricmc.net/" }
@@ -12,8 +10,7 @@ buildscript {
     }
 }
 
-// 26.x ships without obfuscation. Loom has a separate plugin id for that case: it
-// skips mappings and remapping entirely.
+// 26.x is unobfuscated; this Loom plugin id skips mappings and remapping
 ext.unobfuscated = project.findProperty("unobfuscated") == "true"
 
 apply plugin: unobfuscated ? "net.fabricmc.fabric-loom" : "fabric-loom"
@@ -29,8 +26,7 @@ base {
 loom {
     splitEnvironmentSourceSets()
 
-    // Joins a server outside this build on start up, for trying the mod against a
-    // real Paper server: ./gradlew :1.21.11:runClient -Ptest_server=127.0.0.1:25565
+    // ./gradlew :1.21.11:runClient -Ptest_server=127.0.0.1:25565 joins an external server on start
     if (project.hasProperty("test_server")) {
         runs {
             client {
@@ -47,8 +43,7 @@ loom {
     }
 }
 
-// The client gametest API only exists from 1.21.9 on, so the tests build and run
-// against the newest version and cover the shared code for all of them.
+// client gametests need 1.21.9+, so they run on the newest version and cover the shared code
 ext.clientGameTests = project.findProperty("client_gametests") == "true"
 
 fabricApi {
@@ -78,20 +73,13 @@ repositories {
         filter { includeGroup "maven.modrinth" }
     }
 
-    // Add repositories to retrieve artifacts from in here.
-    // You should only use this when depending on other mods because
-    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
-    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
-    // for more information about repositories.
 }
 
-// Without obfuscation there is nothing to remap, so Loom drops the mod* configurations.
 def modApi = unobfuscated ? "implementation" : "modImplementation"
 def modCompileOnlyConf = unobfuscated ? "compileOnly" : "modCompileOnly"
 def modRuntimeConf = unobfuscated ? "runtimeOnly" : "modLocalRuntime"
 
 dependencies {
-    // To change the versions see versions/<game version>/gradle.properties
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
     if (!unobfuscated) {
@@ -101,25 +89,25 @@ dependencies {
     add(modApi, "net.fabricmc:fabric-loader:${project.loader_version}")
     add(modApi, "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
 
-    // Optional at runtime: the config screen is registered through Mod Menu's entrypoint,
-    // which Fabric only loads when Mod Menu is installed.
-    add(modCompileOnlyConf, "com.terraformersmc:modmenu:${project.modmenu_version}")
-    add(modRuntimeConf, "com.terraformersmc:modmenu:${project.modmenu_version}")
+    // optional: Fabric only loads the modmenu entrypoint when Mod Menu is present.
+    // not transitive: older releases pull Placeholder API from a repo we do not use
+    add(modCompileOnlyConf, "com.terraformersmc:modmenu:${project.modmenu_version}") { transitive = false }
+    add(modRuntimeConf, "com.terraformersmc:modmenu:${project.modmenu_version}") { transitive = false }
 
-    // Dev-only, to check the two mods coexist. Never a runtime requirement.
+    // dev only, to check the two mods coexist
     if (project.shulkerboxtooltip_version) {
         add(modRuntimeConf, "maven.modrinth:shulkerboxtooltip:${project.shulkerboxtooltip_version}")
     }
 }
 
-// Keep dev runs silent: the test client opens on a real audio device.
+// dev runs stay silent
 def writeRunOptions = { File runDir, boolean lowSpec ->
     runDir.mkdirs()
     def options = new File(runDir, "options.txt")
     def volumes = ["master", "music", "ambient", "weather", "block", "hostile", "neutral", "player", "record", "voice"]
     def lines = volumes.collect { "soundCategory_${it}:0.0" }
 
-    // Gallery screenshots want a bigger window than CI does: -Pshot_size=1280x720
+    // -Pshot_size=1280x720 for gallery screenshots
     def shotSize = project.findProperty("shot_size")
 
     if (shotSize) {
@@ -128,12 +116,9 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
     }
 
     if (lowSpec) {
-        // The test client has to load a world within a fixed tick budget, and CI
-        // runners draw with llvmpipe on few cores. Cut everything that costs frames.
+        // CI draws with llvmpipe on few cores and the harness gives the world a fixed tick budget
         lines += [
-            // The loading screen blurs its background through a post pass every frame,
-            // which on a software renderer eats the whole tick budget the harness gives
-            // the world to load in.
+            // the menu blur is a post pass per frame, too slow on a software renderer
             "menuBackgroundBlurriness:0",
             'graphicsPreset:"fast"',
             "renderDistance:3",
@@ -152,8 +137,7 @@ def writeRunOptions = { File runDir, boolean lowSpec ->
     options.text = lines.join("\n") + "\n"
 }
 
-// Minecraft sizes its chunk worker pool from the core count, and CI runners are
-// small enough that spawn chunks never finish inside the harness tick budget.
+// the chunk worker pool scales with cores; small CI runners miss the harness budget
 if (clientGameTests) {
     tasks.named("runClientGameTest") {
         jvmArgs "-Dmax.bg.threads=4"
@@ -166,6 +150,13 @@ tasks.matching { it.name in ["runClient", "runClientGameTest", "runServer"] }.co
     doFirst {
         boolean gameTest = it.name == "runClientGameTest"
         writeRunOptions(file(gameTest ? "build/run/clientGameTest" : "run"), gameTest)
+    }
+}
+
+// below 1.20.5 a map id is a bare int, so imports swap to the mod's own MapId
+stonecutter {
+    replacements.string(current.parsed.matches('<1.20.5')) {
+        replace 'import net.minecraft.world.level.saveddata.maps.MapId;', 'import org.dx.show_my_maps.compat.MapId;'
     }
 }
 
@@ -186,12 +177,17 @@ processResources {
     }
 }
 
+// Mixin rejects a compatibility level above the running JVM, and 1.20.1-1.20.4 run on 17
+tasks.withType(ProcessResources).configureEach {
+    inputs.property "java_version", project.java_version
+
+    filesMatching("*.mixins.json") {
+        expand "java_version": project.java_version
+    }
+}
+
 def targetJavaVersion = project.java_version as int
 tasks.withType(JavaCompile).configureEach {
-    // ensure that the encoding is set to UTF-8, no matter what the system default is
-    // this fixes some edge cases with special characters not displaying correctly
-    // see http://yodaconditions.net/blog/fix-for-java-file-encoding-problems-with-gradle.html
-    // If Javadoc is generated, this must be specified in that task too.
     it.options.encoding = "UTF-8"
     if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
         it.options.release.set(targetJavaVersion)
@@ -203,33 +199,20 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
     withSourcesJar()
 }
 
 jar {
-    // The licence sits at the repo root, one level up from each version project.
     from(rootProject.file("LICENSE")) {
         rename { "${it}_${project.archives_base_name}" }
     }
 }
 
-// configure the maven publication
 publishing {
     publications {
         create("mavenJava", MavenPublication) {
             artifactId = project.archives_base_name
             from components.java
         }
-    }
-
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-    repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
     }
 }
