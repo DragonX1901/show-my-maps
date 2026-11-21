@@ -40,7 +40,12 @@
     <select id="sort">
       <option value="id-asc">Sort by id ↑</option>
       <option value="id-desc">Sort by id ↓</option>
-      <option value="name">Sort by name</option>
+    </select>
+    <select id="dimensionFilter">
+      <option value="all">All dimensions</option>
+      <option value="end">End</option>
+      <option value="overworld">Overworld</option>
+      <option value="nether">Nether</option>
     </select>
     <span id="status"></span>
   </div>
@@ -75,7 +80,8 @@ document.getElementById('pickFolder').addEventListener('click', async () => {
   }
 });
 document.getElementById('sort').addEventListener('change', e => { sortMode = e.target.value; sortAndRender(); });
-document.getElementById('clear').addEventListener('click', () => { grid.innerHTML = ''; allTiles = []; updateEmpty(); });
+document.getElementById('dimensionFilter').addEventListener('change', e => { dimensionFilter = e.target.value; sortAndRender(); });
+document.getElementById('clear').addEventListener('click', () => { grid.innerHTML = ''; allTiles = []; dimensionFilter = 'all'; document.getElementById('dimensionFilter').value = 'all'; updateEmpty(); });
 document.getElementById('fileInput').addEventListener('change', e => loadFiles([...e.target.files]));
 document.getElementById('folderInput').addEventListener('change', e => loadFiles([...e.target.files]));
 const drop = document.getElementById('drop');
@@ -164,6 +170,7 @@ async function collectFilesFromDirectoryHandle(dirHandle) {
 
 let allTiles = [];
 let sortMode = 'id-asc';
+let dimensionFilter = 'all';
 
 async function loadFiles(files) {
   const list = files.filter(f => !f.name.startsWith('.'));
@@ -192,12 +199,24 @@ function parseId(name) {
   return m ? parseInt(m[1], 10) : Infinity;
 }
 
+function dimensionOf(tile) {
+  if (!tile.art) return null;
+  const d = (tile.art.dimension || '').toLowerCase();
+  if (d.includes('end')) return 'end';
+  if (d.includes('nether')) return 'nether';
+  if (d.includes('overworld')) return 'overworld';
+  return null;
+}
+
 function sortAndRender() {
   grid.innerHTML = '';
-  const sorted = allTiles.slice().sort((a, b) => {
+  let list = allTiles.slice();
+  if (dimensionFilter !== 'all') {
+    list = list.filter(t => dimensionOf(t) === dimensionFilter);
+  }
+  const sorted = list.sort((a, b) => {
     if (sortMode === 'id-asc') return parseId(a.name) - parseId(b.name);
     if (sortMode === 'id-desc') return parseId(b.name) - parseId(a.name);
-    if (sortMode === 'name') return a.name.localeCompare(b.name);
     return 0;
   });
   for (const t of sorted) {
