@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Show My Maps — cache viewer</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #121212; color: #eee; }
+  header { padding: 16px 24px; border-bottom: 1px solid #2a2a2a; }
+  h1 { margin: 0; font-size: 18px; }
+  .sub { margin: 4px 0 0; font-size: 13px; color: #999; }
+  main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .controls { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  button { padding: 8px 14px; background: #2a2a2a; color: #eee; border: 1px solid #444; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #3a3a3a; }
+  .drop { border: 2px dashed #444; border-radius: 12px; padding: 28px; text-align: center; cursor: pointer; margin-bottom: 16px; }
+  .drop:hover { border-color: #888; background: #1a1a1a; }
+  .drop input { display: none; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  .tile { background: #1e1e1e; border: 1px solid #2a2a2a; border-radius: 8px; padding: 10px; }
+  .tile canvas { width: 100%; height: auto; image-rendering: pixelated; border: 1px solid #333; border-radius: 4px; display: block; }
+  .tile .name { font-size: 12px; color: #ccc; margin-top: 8px; word-break: break-all; }
+  .tile .meta { font-size: 11px; color: #777; margin-top: 2px; }
+  .empty { color: #666; text-align: center; padding: 40px; }
+  #status { font-size: 13px; color: #999; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Show My Maps — on-disk cache viewer</h1>
+  <p class="sub">Drop files or a folder of <code>.bin</code> caches, bare 16384-byte colour dumps, or 128×128 PNGs. Everything runs locally.</p>
+</header>
+<main>
+  <div class="controls">
+    <button id="pickFiles">Choose files</button>
+    <button id="pickFolder">Choose folder</button>
+    <button id="clear">Clear</button>
+    <select id="sort">
+      <option value="id-asc">Sort by id ↑</option>
+      <option value="id-desc">Sort by id ↓</option>
+    </select>
+    <select id="dimensionFilter">
+      <option value="all">All dimensions</option>
+      <option value="end">End</option>
+      <option value="overworld">Overworld</option>
+      <option value="nether">Nether</option>
+    </select>
+    <span id="status"></span>
+  </div>
+  <div class="drop" id="drop">
+    Drop files or a folder here
+    <input type="file" id="fileInput" multiple hidden>
+    <input type="file" id="folderInput" webkitdirectory directory multiple hidden>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="empty">No files loaded yet.</div>
+</main>
+<script>
+const PALETTE = [0, 0, 0, 0, -10912473, -9594576, -8408520, -12362211, -5331853, -2766452, -530013, -8225962, -7566196, -5526613, -3684409, -9868951, -4980736, -2359296, -65536, -7929856, -9408332, -7697700, -6250241, -11250553, -9079435, -7303024, -5789785, -10987432, -16754944, -16750080, -16745472, -16760576, -4934476, -2302756, -1, -7895161, -9210239, -7499618, -5986120, -11118495, -9810890, -8233406, -6853299, -11585240, -11579569, -10461088, -9408400, -12895429, -13816396, -13158436, -12566273, -14605945, -10202062, -8690114, -7375032, -11845850, -4935252, -2303533, -779, -7895679, -6792924, -4559572, -2588877, -9288933, -8571496, -6733382, -5092136, -10606478, -12030824, -10976070, -10053160, -13217422, -6184668, -3816148, -1710797, -8816357, -10907631, -9588715, -8401895, -12358643, -5613196, -3117682, -884827, -8371369, -13290187, -12500671, -11776948, -14145496, -9671572, -8092540, -6710887, -11447983, -13280916, -12489340, -11763815, -14138543, -10933123, -9619815, -8437838, -12377762, -14404227, -13876839, -13415246, -14997410, -12045020, -10993364, -10073037, -13228005, -12035804, -10982100, -10059981, -13221093, -9690076, -8115156, -6737101, -11461861, -15658735, -15395563, -15132391, -15921907, -5199818, -2634430, -332211, -8094168, -12543338, -11551561, -10691627, -13601936, -13346124, -12620068, -11894529, -14204025, -16738008, -16729294, -16721606, -16748002, -10798046, -9483734, -8301007, -12309223, -11599616, -10485504, -9436672, -12910336, -7111567, -4941686, -3034719, -9544363, -9422567, -7780833, -6335964, -11261165, -9880244, -8369315, -6989972, -11653575, -11580319, -10461833, -9409398, -12895927, -8168167, -6262241, -4553436, -10336749, -12037595, -10984403, -9997003, -13222628, -9423305, -7716285, -6271666, -11261911, -14148584, -13556962, -13031133, -14805742, -10532027, -9151404, -7902366, -12109773, -12763072, -11841713, -11051940, -13750224, -11128002, -9879989, -8763048, -12573138, -13292736, -12503729, -11780516, -14147536, -13294824, -12506338, -11783645, -14149102, -13289187, -12499420, -11775446, -14144746, -10212832, -8768729, -7455698, -11854056, -15069429, -14740979, -14346736, -15529208, -8052446, -6084310, -4378575, -10217191, -9950140, -8440237, -7061663, -11656909, -12578540, -11594471, -10741475, -13628145, -15771554, -15569805, -15303034, -16039354, -14130078, -13469064, -12939636, -14791862, -12837077, -11918027, -11129794, -13822176, -15827107, -15623310, -15420283, -16097466, -12171706, -11119018, -10197916, -13355980, -6784153, -4548994, -2576493, -9282483, -10914455, -9596799, -8411242, -12363697, 0, 0, 0, 0, 0, 0, 0, 0];
+const COLOUR_COUNT = 128 * 128;
+
+const grid = document.getElementById('grid');
+const empty = document.getElementById('empty');
+const status = document.getElementById('status');
+
+document.getElementById('pickFiles').addEventListener('click', () => document.getElementById('fileInput').click());
+document.getElementById('pickFolder').addEventListener('click', async () => {
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = await window.showDirectoryPicker();
+      const files = await collectFilesFromDirectoryHandle(dir);
+      await loadFiles(files);
+    } catch (e) {
+      if (e && e.name !== 'AbortError') console.error(e);
+    }
+  } else {
+    document.getElementById('folderInput').click();
+  }
+});
+document.getElementById('sort').addEventListener('change', e => { sortMode = e.target.value; sortAndRender(); });
+document.getElementById('dimensionFilter').addEventListener('change', e => { dimensionFilter = e.target.value; sortAndRender(); });
+document.getElementById('clear').addEventListener('click', () => { grid.innerHTML = ''; allTiles = []; dimensionFilter = 'all'; document.getElementById('dimensionFilter').value = 'all'; updateEmpty(); });
+document.getElementById('fileInput').addEventListener('change', e => loadFiles([...e.target.files]));
+document.getElementById('folderInput').addEventListener('change', e => loadFiles([...e.target.files]));
+const drop = document.getElementById('drop');
+drop.addEventListener('click', () => document.getElementById('fileInput').click());
+drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor = '#aaa'; });
+drop.addEventListener('dragleave', () => drop.style.borderColor = '#444');
+drop.addEventListener('drop', async e => { e.preventDefault(); drop.style.borderColor = '#444'; try { const files = await collectFilesFromDataTransfer(e.dataTransfer); await loadFiles(files); } catch (err) { console.error('Failed to collect dropped files', e.dataTransfer, err); await loadFiles(Array.from(e.dataTransfer.files || [])); } });
+
+function updateEmpty() {
+  empty.style.display = grid.children.length ? 'none' : 'block';
+}
+updateEmpty();
+
+async function collectFilesFromDataTransfer(dataTransfer) {
+  const out = [];
+  const items = dataTransfer.items ? Array.from(dataTransfer.items) : [];
+
+  for (const item of items) {
+    const entry = item.webkitGetAsEntry ? item.webkitGetAsEntry() : null;
+
+    if (entry) {
+      if (entry.isDirectory) {
+        const reader = entry.createReader();
+        const entries = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+        for (const child of entries) {
+          await collectInto(child, out);
+        }
+      } else if (entry.isFile) {
+        const file = await entryToFile(entry);
+        if (file) {
+          out.push(file);
+        }
+      }
+    } else if (item.kind === 'file') {
+      const file = item.getAsFile ? item.getAsFile() : null;
+      if (file) {
+        out.push(file);
+      }
+    }
+  }
+
+  if (out.length === 0) {
+    console.warn('Folder collection yielded no files; falling back to dataTransfer.files', dataTransfer.files);
+    out.push(...Array.from(dataTransfer.files || []));
+  } else {
+    console.log('Collected ' + out.length + ' file(s) from dropped folder');
+  }
+
+  return out;
+}
+
+async function collectInto(entry, out) {
+  if (entry.isDirectory) {
+    const reader = entry.createReader();
+    const entries = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+
+    for (const child of entries) {
+      await collectInto(child, out);
+    }
+  } else if (entry.isFile) {
+    const file = await entryToFile(entry);
+    if (file) {
+      out.push(file);
+    }
+  }
+}
+
+async function entryToFile(entry) {
+  return new Promise((resolve, reject) => entry.file(resolve, reject));
+}
+
+async function collectFilesFromDirectoryHandle(dirHandle) {
+  const out = [];
+  for await (const [name, handle] of dirHandle.entries()) {
+    if (handle.kind === 'file') {
+      const file = await handle.getFile();
+      out.push(file);
+    } else if (handle.kind === 'directory') {
+      const nested = await collectFilesFromDirectoryHandle(handle);
+      out.push(...nested);
+    }
+  }
+  return out;
+}
+
+let allTiles = [];
+let sortMode = 'id-asc';
+let dimensionFilter = 'all';
+
+async function loadFiles(files) {
+  const list = files.filter(f => !f.name.startsWith('.'));
+  status.textContent = 'Loading ' + list.length + ' file(s)...';
+  const tiles = [];
+  let done = 0;
+  for (const f of list) {
+    try {
+      const buf = new Uint8Array(await f.arrayBuffer());
+      const art = await decode(buf);
+      tiles.push({ name: f.name, art, err: null });
+    } catch (e) {
+      tiles.push({ name: f.name, art: null, err: e.message });
+    }
+    done++;
+    status.textContent = 'Loaded ' + done + '/' + list.length;
+  }
+  allTiles.push(...tiles);
+  sortAndRender();
+  status.textContent = 'Loaded ' + list.length + ' file(s).';
+  updateEmpty();
+}
+
+function parseId(name) {
+  const m = name.match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : Infinity;
+}
+
+function dimensionOf(tile) {
+  if (!tile.art) return null;
+  const d = (tile.art.dimension || '').toLowerCase();
+  if (d.includes('end')) return 'end';
+  if (d.includes('nether')) return 'nether';
+  if (d.includes('overworld')) return 'overworld';
+  return null;
+}
+
+function sortAndRender() {
+  grid.innerHTML = '';
+  let list = allTiles.slice();
+  if (dimensionFilter !== 'all') {
+    list = list.filter(t => dimensionOf(t) === dimensionFilter);
+  }
+  const sorted = list.sort((a, b) => {
+    if (sortMode === 'id-asc') return parseId(a.name) - parseId(b.name);
+    if (sortMode === 'id-desc') return parseId(b.name) - parseId(a.name);
+    return 0;
+  });
+  for (const t of sorted) {
+    addTile(t.name, t.art, t.err);
+  }
+  updateEmpty();
+}
+
+function addTile(name, art, err) {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  const c = document.createElement('canvas');
+  c.width = 128; c.height = 128;
+  const cx = c.getContext('2d');
+  if (art) {
+    const img = cx.createImageData(128, 128);
+    for (let i = 0; i < COLOUR_COUNT; i++) {
+      const argb = PALETTE[art.colours[i]];
+      img.data[i*4]   = (argb >> 16) & 0xFF;
+      img.data[i*4+1] = (argb >> 8) & 0xFF;
+      img.data[i*4+2] = argb & 0xFF;
+      img.data[i*4+3] = (argb >>> 24) & 0xFF;
+    }
+    cx.putImageData(img, 0, 0);
+  } else {
+    cx.fillStyle = '#333';
+    cx.fillRect(0, 0, 128, 128);
+    cx.fillStyle = '#f66';
+    cx.font = '12px system-ui';
+    cx.textAlign = 'center';
+    cx.fillText('unreadable', 64, 64);
+  }
+  tile.appendChild(c);
+  const n = document.createElement('div');
+  n.className = 'name';
+  n.textContent = name;
+  tile.appendChild(n);
+  const m = document.createElement('div');
+  m.className = 'meta';
+  m.textContent = err ? err : ('id ' + parseId(name) + ' · scale ' + art.scale + ' · ' + art.dimension + (art.locked ? ' · locked' : ''));
+  tile.appendChild(m);
+  grid.appendChild(tile);
+}
+
+async function decode(body) {
+  if (body.length === COLOUR_COUNT) {
+    return { scale: 0, locked: false, dimension: 'minecraft:overworld', colours: body.slice() };
+  }
+  if (body.length >= 8 && body[0] === 0x89 && body[1] === 0x50 && body[2] === 0x4E && body[3] === 0x47) {
+    return decodePng(body);
+  }
+  return decodeCache(body);
+}
+
+function decodeCache(body) {
+  const dv = new DataView(body.buffer, body.byteOffset, body.byteLength);
+  let off = 0;
+  const format = dv.getInt32(off, false); off += 4;
+  if (format !== 1 && format !== 2) throw new Error('not a map file: format ' + format);
+  if (format === 2) off += 1;
+  const scale = dv.getInt8(off); off += 1;
+  const locked = dv.getUint8(off) !== 0; off += 1;
+  const strLen = dv.getUint16(off, false); off += 2;
+  const bytes = body.slice(off, off + strLen); off += strLen;
+  const dimension = new TextDecoder('utf-8').decode(bytes);
+  const colours = body.slice(off, off + COLOUR_COUNT);
+  if (colours.length !== COLOUR_COUNT) throw new Error('truncated colour array');
+  return { scale, locked, dimension, colours };
+}
+
+function decodePng(body) {
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([body], { type: 'image/png' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement('canvas');
+      c.width = 128; c.height = 128;
+      const cx = c.getContext('2d');
+      cx.drawImage(img, 0, 0, 128, 128);
+      const px = cx.getImageData(0, 0, 128, 128).data;
+      const colours = new Uint8Array(COLOUR_COUNT);
+      for (let i = 0; i < COLOUR_COUNT; i++) {
+        const r = px[i*4], g = px[i*4+1], b = px[i*4+2], a = px[i*4+3];
+        if (a < 0x80) { colours[i] = 0; continue; }
+        let best = 0, bestD = Infinity;
+        for (let idx = 4; idx < 256; idx++) {
+          const p = PALETTE[idx];
+          if ((p >>> 24) === 0) continue;
+          const dr = ((p >> 16) & 0xFF) - r;
+          const dg = ((p >> 8) & 0xFF) - g;
+          const db = (p & 0xFF) - b;
+          const d = dr*dr + dg*dg + db*db;
+          if (d === 0) { best = idx; break; }
+          if (d < bestD) { bestD = d; best = idx; }
+        }
+        colours[i] = best;
+      }
+      URL.revokeObjectURL(url);
+      resolve({ scale: 0, locked: false, dimension: 'minecraft:overworld', colours });
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('PNG decode failed')); };
+    img.src = url;
+  });
+}
+</script>
+</body>
+</html>

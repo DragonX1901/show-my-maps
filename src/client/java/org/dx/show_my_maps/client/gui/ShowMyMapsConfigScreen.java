@@ -13,6 +13,8 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
+import org.dx.show_my_maps.client.MapArtOptimizerQuality;
+import org.dx.show_my_maps.client.MapArtOptimizerState;
 import org.dx.show_my_maps.client.MapArtSource;
 import org.dx.show_my_maps.client.MapDataCache;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
@@ -78,7 +80,39 @@ public class ShowMyMapsConfigScreen extends Screen {
             .create(leftColumn, top + ROW_HEIGHT * 5, columnWidth, 20, Component.translatable("option.show_my_maps.external_art"),
                 (button, value) -> config.externalArt = value));
 
-        // the address is per server, so it needs one to key by
+//? if >=1.21 {
+        addRenderableWidget(CycleButton.onOffBuilder(config.connectedSlotPreview)
+            .create(leftColumn, top + ROW_HEIGHT * 6, columnWidth, 20, Component.translatable("option.show_my_maps.connected_slot_preview"),
+                (button, value) -> config.connectedSlotPreview = value));
+        addRenderableWidget(CycleButton.onOffBuilder(config.connectedSlotHighlight)
+            .create(rightColumn, top + ROW_HEIGHT * 6, columnWidth, 20, Component.translatable("option.show_my_maps.connected_highlight"),
+                (button, value) -> config.connectedSlotHighlight = value));
+//?}
+
+//? if >=26 {
+/*        addRenderableWidget(CycleButton.onOffBuilder(config.mapArtEnabled)
+            .create(leftColumn, top + ROW_HEIGHT * 7, columnWidth, 20, Component.translatable("option.show_my_maps.map_art_enabled"),
+                (button, value) -> config.mapArtEnabled = value));
+        addRenderableWidget(CycleButton.<MapArtOptimizerQuality>builder(
+                quality -> Component.translatable("option.show_my_maps.map_art_quality." + quality.name().toLowerCase()),
+                MapArtOptimizerState::quality)
+            .withValues(MapArtOptimizerQuality.values())
+            .create(rightColumn, top + ROW_HEIGHT * 7, columnWidth, 20,
+                Component.translatable("option.show_my_maps.map_art_quality"),
+                (button, quality) -> config.mapArtQuality = quality));
+
+        addRenderableWidget(CycleButton.onOffBuilder(config.mapArtLimitRenderDistance)
+            .create(leftColumn, top + ROW_HEIGHT * 8, columnWidth, 20, Component.translatable("option.show_my_maps.map_art_limit_distance"),
+                (button, value) -> config.mapArtLimitRenderDistance = value));
+        addRenderableWidget(new IntSlider(rightColumn, top + ROW_HEIGHT * 8, columnWidth, "option.show_my_maps.map_art_max_distance",
+            ShowMyMapsConfig.MIN_MAP_ART_DISTANCE, ShowMyMapsConfig.MAX_MAP_ART_DISTANCE, () -> config.mapArtMaxRenderDistance, value -> config.mapArtMaxRenderDistance = value));
+        addRenderableWidget(CycleButton.onOffBuilder(config.mapArtHideDecorations)
+            .create(leftColumn, top + ROW_HEIGHT * 9, columnWidth, 20, Component.translatable("option.show_my_maps.map_art_hide_decorations"),
+                (button, value) -> config.mapArtHideDecorations = value));
+*///?}
+        // The address belongs to one server, so it can only be set while on one.
+        // From the title screen there is nothing to key it by.
+
         String server = this.minecraft != null && this.minecraft.level != null ? MapDataCache.serverKey() : null;
         EditBox address = new EditBox(this.font, rightColumn, top + ROW_HEIGHT * 5, columnWidth, 20,
             Component.translatable("option.show_my_maps.art_source"));
@@ -102,8 +136,14 @@ public class ShowMyMapsConfigScreen extends Screen {
 
         addRenderableWidget(address);
 
+//? if >=26 {
+/*        int doneRow = 10;
+*///?} else {
+        int doneRow = 7;
+//?}
+
         addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, button -> onClose())
-            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * 6 + 8, this.height - 28), WIDGET_WIDTH, 20)
+            .bounds(leftColumn, Math.min(top + ROW_HEIGHT * doneRow + 8, this.height - 28), WIDGET_WIDTH, 20)
             .build());
     }
 

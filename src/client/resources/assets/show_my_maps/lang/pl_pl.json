@@ -19,5 +19,7 @@
   "chat.show_my_maps.art_source_wrong": "Show My Maps: źródło obrazów dla tego serwera wciąż wysyłało błędne obrazy, więc zostało wyłączone, a to, co przysłało, odrzucone.",
   "chat.show_my_maps.harvest": "Show My Maps: uzupełniono %s brakujących podglądów map — otwórz menu ponownie, aby je zobaczyć",
   "chat.show_my_maps.server_outdated": "Ten serwer używa SHOW MY MAPS %s. Ta wersja wymaga %s lub nowszej, więc poproś administratora o aktualizację.",
-  "chat.show_my_maps.server_missing": "SHOW MY MAPS nie jest zainstalowany na tym serwerze albo jest starszy niż 1.0.3 i nie może tego zgłosić, więc wysyła tylko mapy, które trzymasz, oraz mapy w ramkach, obok których przechodzisz. Mapy w skrzyniach, w skrzyniach shulkera i na ziemi pozostają puste, dopóki nie zobaczysz ich w jeden z tych dwóch sposobów."
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS nie jest zainstalowany na tym serwerze albo jest starszy niż 1.0.3 i nie może tego zgłosić, więc wysyła tylko mapy, które trzymasz, oraz mapy w ramkach, obok których przechodzisz. Mapy w skrzyniach, w skrzyniach shulkera i na ziemi pozostają puste, dopóki nie zobaczysz ich w jeden z tych dwóch sposobów.",
+  "option.show_my_maps.connected_slot_preview": "Join adjacent maps",
+  "option.show_my_maps.connected_highlight": "Hover box on joined maps"
 }

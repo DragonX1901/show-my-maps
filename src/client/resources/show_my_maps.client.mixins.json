@@ -4,11 +4,15 @@
   "package": "org.dx.show_my_maps.mixin.client",
   "compatibilityLevel": "JAVA_${java_version}",
   "client": [
+    "ContainerMapPreviewMixin",
     "ContainerTooltipLinesMixin",
     "DroppedMapEntityMixin",
+    "ItemFrameRendererMixin",
     "ItemTooltipImageMixin",
     "LevelSwapMixin",
     "MapDataReceivedMixin",
+    "MapRendererMixin",
+    "MapTextureManagerMixin",
     "SlotMapIconMixin"
   ],
   "injectors": {

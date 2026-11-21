@@ -19,5 +19,7 @@
   "chat.show_my_maps.art_source_wrong": "Show My Maps: la fonte immagini di questo server ha continuato a inviare immagini sbagliate, quindi è stata disattivata e quanto ricevuto è stato scartato.",
   "chat.show_my_maps.harvest": "Show My Maps: completate %s anteprime di mappe mancanti — riapri il menu per vederle",
   "chat.show_my_maps.server_outdated": "Questo server usa SHOW MY MAPS %s. Questa versione richiede almeno %s, quindi chiedi a chi lo gestisce di aggiornarlo.",
-  "chat.show_my_maps.server_missing": "SHOW MY MAPS non è installato su questo server, o è precedente alla 1.0.3 e non può dirlo, quindi invia solo le mappe che porti con te e quelle nei quadri a cui ti avvicini. Le mappe nei bauli, nelle shulker box e a terra restano vuote finché non le hai viste in uno di questi due modi."
+  "chat.show_my_maps.server_missing": "SHOW MY MAPS non è installato su questo server, o è precedente alla 1.0.3 e non può dirlo, quindi invia solo le mappe che porti con te e quelle nei quadri a cui ti avvicini. Le mappe nei bauli, nelle shulker box e a terra restano vuote finché non le hai viste in uno di questi due modi.",
+  "option.show_my_maps.connected_slot_preview": "Join adjacent maps",
+  "option.show_my_maps.connected_highlight": "Hover box on joined maps"
 }

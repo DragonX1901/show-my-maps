@@ -18,6 +18,9 @@ real thing instead.
 
 - **Map icons** — the slot shows the art in place of the parchment sprite, so a page full of map
   art reads at a glance, with no hovering.
+- **Joined map art** — maps in touching slots (a 2×2 in a chest, a row in your inventory, a wall
+  in an auction page) draw as one continuous picture instead of separate icons with parchment
+  gaps. Turn it off with **Join adjacent maps**.
 - **Tooltip preview** — hover a map anywhere a tooltip appears — inventory, chest, hopper,
   creative menu, a shop GUI — and the picture renders under the normal lines.
 - **Maps you never carried** — a chest full of art reads as art, not as a row of identical
@@ -26,6 +29,9 @@ real thing instead.
 - **Shulker box tooltip** — hover a box and its contents appear as a slot grid, maps included,
   replacing vanilla's list of item names. Steps aside automatically if you have
   [Shulker Box Tooltip](https://modrinth.com/mod/shulkerboxtooltip) installed.
+- **Map art optimisation** (26.x) — framed map art can be rebuilt at a lower resolution, or
+  blanked past a set distance, so a wall of maps stops eating video memory. Off by default;
+  pick a quality tier from Ultra down to Off in the settings.
 
 More screenshots on [Modrinth](https://modrinth.com/mod/show-my-maps/gallery).
 
@@ -66,9 +72,9 @@ A server half is not the only place those pixels can come from. They are also si
 server's own `world/data/map_*.dat`, and an owner who publishes that folder gives every player a
 place to read them from — **without installing anything or restarting**.
 
-Read [map-export](map-export) for the tool that does the publishing. It takes a world folder or a
-backup zip and writes `<id>.bin` plus a `manifest.json`; copy that to any static host over HTTPS.
-
+Publishing is done by hand now: a world's `data/map_*.dat` files are converted to
+`<id>.bin` plus a `manifest.json` and copied to any static host over HTTPS. (The
+bundled exporter was dropped; see the project history for why.)
 On the client, turn on **Fetch missing art** and put the address in **Art source**. It is set per
 server, off by default, and only asked for maps that would otherwise draw blank. A folder is
 enough; a template with `{id}` in it works too if your host wants a different layout. Three

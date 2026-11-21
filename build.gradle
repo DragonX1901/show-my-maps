@@ -206,6 +206,9 @@ jar {
     from(rootProject.file("LICENSE")) {
         rename { "${it}_${project.archives_base_name}" }
     }
+
+    // Connected Map Arts' MIT notice travels with the code adapted from it.
+    from(rootProject.file("THIRD-PARTY-NOTICES.md"))
 }
 
 publishing {

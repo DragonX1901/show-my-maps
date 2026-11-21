@@ -16,5 +16,5 @@ permissions:
 commands:
   showmymaps:
     description: Report whether map sending is working, and what to fix if it is not.
-    usage: /showmymaps
+    usage: "/showmymaps [reload]"
     permission: showmymaps.status

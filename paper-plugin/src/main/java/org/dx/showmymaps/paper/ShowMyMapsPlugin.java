@@ -95,10 +95,19 @@ public class ShowMyMapsPlugin extends JavaPlugin implements Listener {
      */
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        // with nobody online every counter is zero, which is not a fault
-        boolean anyone = !getServer().getOnlinePlayers().isEmpty();
+        if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
+            readConfig();
+            sender.sendMessage("SHOW MY MAPS " + getPluginMeta().getVersion() + " reloaded");
+            sender.sendMessage("  scan interval changes take effect on the next restart");
+            return true;
+        }
 
-        sender.sendMessage("SHOW MY MAPS " + version());
+        // With nobody on, every counter is zero for the dullest possible reason, and
+        // saying "nothing is running" then would send an owner hunting a bug that is
+        // not there. Ask with a player online.
+        boolean anyone = !getServer().getOnlinePlayers().isEmpty();
+        sender.sendMessage("SHOW MY MAPS " + getPluginMeta().getVersion());
+
         sender.sendMessage("  sweeps run:      " + this.sweeps
             + (this.sweeps == 0
                 ? (anyone ? "   <- nothing is running; see the console for errors"

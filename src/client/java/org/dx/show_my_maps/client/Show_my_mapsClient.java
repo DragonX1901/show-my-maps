@@ -46,6 +46,9 @@ public class Show_my_mapsClient implements ClientModInitializer {
             MapDataCache.flush(minecraft.level);
             ServerSupport.endSession();
             MapArtSource.endSession();
+            //? if >=26 {
+            /*LowResMapTextures.invalidateAll();
+            *///?}
         });
         ClientTickEvents.END_CLIENT_TICK.register(Show_my_mapsClient::tick);
     }

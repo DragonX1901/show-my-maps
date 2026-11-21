@@ -4,8 +4,10 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.inventory.MerchantMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.item.trading.MerchantOffers;import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
@@ -52,6 +54,20 @@ public final class ContainerMapSync {
             ItemStack stack = slot.getItem();
             syncNested(player, level, config, stack);
             sync(player, level, config, stack);
+        }
+
+        if (player.containerMenu instanceof MerchantMenu merchantMenu) {
+            for (MerchantOffer offer : merchantMenu.getOffers()) {
+                syncOffer(player, level, config, offer);
+            }
+        }
+    }
+
+    private static void syncOffer(ServerPlayer player, ServerLevel level, ShowMyMapsServerConfig config, MerchantOffer offer) {
+        sync(player, level, config, offer.getResult());
+        sync(player, level, config, offer.getCostA());
+        if (!offer.getCostB().isEmpty()) {
+            sync(player, level, config, offer.getCostB());
         }
     }
 

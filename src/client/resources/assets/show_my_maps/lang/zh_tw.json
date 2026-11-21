@@ -19,5 +19,7 @@
   "chat.show_my_maps.art_source_wrong": "Show My Maps：此伺服器的圖像來源多次傳送錯誤的圖片，已將其關閉並丟棄收到的內容。",
   "chat.show_my_maps.harvest": "Show My Maps：已補齊 %s 張缺少的地圖預覽 —— 重新開啟選單即可看到",
   "chat.show_my_maps.server_outdated": "此伺服器執行的是 SHOW MY MAPS %s。此版本需要 %s 或更新版本，請聯絡伺服器管理員更新。",
-  "chat.show_my_maps.server_missing": "此伺服器未安裝 SHOW MY MAPS，或版本早於 1.0.3 而無法告知，因此只會傳送你攜帶的地圖以及你走近的展示框中的地圖。箱子裡、界伏盒裡和地上的地圖會一直是空白，直到你以這兩種方式之一見過它們。"
+  "chat.show_my_maps.server_missing": "此伺服器未安裝 SHOW MY MAPS，或版本早於 1.0.3 而無法告知，因此只會傳送你攜帶的地圖以及你走近的展示框中的地圖。箱子裡、界伏盒裡和地上的地圖會一直是空白，直到你以這兩種方式之一見過它們。",
+  "option.show_my_maps.connected_slot_preview": "Join adjacent maps",
+  "option.show_my_maps.connected_highlight": "Hover box on joined maps"
 }
