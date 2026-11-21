@@ -94,4 +94,14 @@ public final class MapArtOptimizerState {
     public static boolean takeForcedRefresh(int mapId) {
         return forcedRefresh.remove(mapId);
     }
+
+    /**
+     * Drop deferred and forced refresh markers together. Called when the low-res
+     * texture cache is invalidated, so a fresh session never inherits draw-time
+     * bookkeeping from a previous one.
+     */
+    public static void clearRefreshMarkers() {
+        deferredRefresh.clear();
+        forcedRefresh.clear();
+    }
 }

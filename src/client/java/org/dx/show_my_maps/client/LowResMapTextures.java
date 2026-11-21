@@ -34,6 +34,11 @@ public final class LowResMapTextures {
             return blankTexture();
         }
 
+        if (data == null) {
+            // Nothing to resample yet; let the caller fall back to a safe picture.
+            return blankTexture();
+        }
+
         int key = mapId.id();
         long now = System.currentTimeMillis();
         LowResMapTextures.Entry entry = CACHE.get(key);
@@ -161,6 +166,10 @@ public final class LowResMapTextures {
 
     public static void invalidateAll() {
         Minecraft minecraft = Minecraft.getInstance();
+
+        // Drop draw-time refresh markers so they cannot outlive the texture cache
+        // they belong to.
+        MapArtOptimizerState.clearRefreshMarkers();
 
         if (minecraft == null) {
             return;
