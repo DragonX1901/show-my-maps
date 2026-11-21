@@ -21,15 +21,7 @@ import org.dx.show_my_maps.client.MapDataAccess;
 import org.dx.show_my_maps.client.MapDataCache;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 
-/**
- * Behind a proxy each backend hands out map ids from its own counter, so one address
- * ends up meaning two different pictures under the same id and the cache - keyed by
- * the address, one address for the whole network - would answer with the wrong one.
- *
- * <p>This drives that collision: the same id cached once, then sent again by the
- * server as a demonstrably different map. The cache has to notice and stop answering
- * for that id, while leaving every id that does not collide alone.
- */
+/** Proxy backends reusing an id: the cache must stop answering for it and leave other ids alone. */
 public class ContestedIdTest implements FabricClientGameTest {
     private static final int COLLIDING = 41337;
     private static final int INNOCENT = 41338;
@@ -49,7 +41,6 @@ public class ContestedIdTest implements FabricClientGameTest {
 
             clear(context, COLLIDING, INNOCENT);
 
-            // One map cached the ordinary way, as the server sending it would.
             receive(context, COLLIDING, (byte) 1, "minecraft:overworld", (byte) 20);
             receive(context, INNOCENT, (byte) 1, "minecraft:overworld", (byte) 21);
 
@@ -61,8 +52,7 @@ public class ContestedIdTest implements FabricClientGameTest {
                 throw new AssertionError("the cache should answer for an id nothing has contradicted");
             }
 
-            // The same id, but a map that cannot be the same one: a map's scale is
-            // fixed when it is made, so this is another backend's map 41337.
+            // scale is fixed at creation, so this must be another backend's map
             receive(context, COLLIDING, (byte) 3, "minecraft:overworld", (byte) 90);
 
             if (!contested(context, COLLIDING)) {
@@ -73,7 +63,6 @@ public class ContestedIdTest implements FabricClientGameTest {
                 throw new AssertionError("the cache still answers for map " + COLLIDING + " after it was contested");
             }
 
-            // The collision must not spread: other ids are still perfectly good.
             if (contested(context, INNOCENT) || restored(context, INNOCENT) == null) {
                 throw new AssertionError("map " + INNOCENT + " was punished for another id's collision");
             }
@@ -85,7 +74,6 @@ public class ContestedIdTest implements FabricClientGameTest {
         }
     }
 
-    /** The proof arrives once, so it has to outlive the session that saw it. */
     private static void assertRemembered(ClientGameTestContext context) {
         Path file = context.computeOnClient(minecraft ->
             MapDataCache.cacheFile(new MapId(COLLIDING)).getParent().resolve("contested_ids.txt"));
@@ -103,7 +91,6 @@ public class ContestedIdTest implements FabricClientGameTest {
         }
     }
 
-    /** Puts a map into the level the way a received packet would, then flushes it. */
     private static void receive(ClientGameTestContext context, int id, byte scale, String dimension, byte colour) {
         context.runOnClient(minecraft -> {
             //? if >=1.21.9 {
@@ -121,11 +108,10 @@ public class ContestedIdTest implements FabricClientGameTest {
         });
     }
 
-    /** Asks the cache alone, with whatever the level holds cleared out of the way. */
     private static MapItemSavedData restored(ClientGameTestContext context, int id) {
         return context.computeOnClient(minecraft -> {
             MapId mapId = new MapId(id);
-            // A fresh empty level entry, so this reads the file rather than the level.
+            // empty level entry, so this reads the file
             MapDataCache.forget(mapId);
             return MapDataCache.restore(minecraft.level, mapId);
         });

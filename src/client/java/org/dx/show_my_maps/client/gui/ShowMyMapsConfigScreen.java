@@ -23,10 +23,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.function.IntConsumer;
 import java.util.function.IntSupplier;
 
-/**
- * Plain vanilla widgets, so the mod carries no config library. Mod Menu opens this,
- * and everything saves when you leave.
- */
+/** Vanilla widgets only, so no config library. Saves on close. */
 public class ShowMyMapsConfigScreen extends Screen {
     private static final int ROW_HEIGHT = 24;
     private static final int WIDGET_WIDTH = 310;
@@ -115,6 +112,7 @@ public class ShowMyMapsConfigScreen extends Screen {
 *///?}
         // The address belongs to one server, so it can only be set while on one.
         // From the title screen there is nothing to key it by.
+
         String server = this.minecraft != null && this.minecraft.level != null ? MapDataCache.serverKey() : null;
         EditBox address = new EditBox(this.font, rightColumn, top + ROW_HEIGHT * 5, columnWidth, 20,
             Component.translatable("option.show_my_maps.art_source"));
@@ -168,8 +166,7 @@ public class ShowMyMapsConfigScreen extends Screen {
         ShowMyMapsConfig.get().save();
 
         if (this.minecraft != null && this.minecraft.level != null) {
-            // The address may have just changed, and a source switched off for lying
-            // deserves a fresh start once the player has been back here to look at it.
+            // the address may have changed; give a source switched off for lying a fresh start
             MapArtSource.beginSession();
         }
 

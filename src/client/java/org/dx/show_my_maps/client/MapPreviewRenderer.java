@@ -6,22 +6,19 @@ import net.minecraft.client.Minecraft;
 *///?} else {
 import net.minecraft.client.gui.GuiGraphics;
 //?}
-//? if >=1.21.9 {
-import net.minecraft.client.renderer.MapRenderer;
+//? if >=1.21.6 {
 import org.joml.Matrix3x2fStack;
 //?} else {
 /*import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.LightTexture;
+*///?}
+//? if <1.21.2 {
+/*import net.minecraft.client.renderer.MultiBufferSource;
 *///?}
 import net.minecraft.world.level.saveddata.maps.MapId;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
 
-/**
- * Shared blit for every place a map picture is drawn into a GUI.
- */
 public final class MapPreviewRenderer {
-    /** A map picture is always 128 by 128 pixels. */
     public static final int MAP_SIZE = 128;
 
     private MapPreviewRenderer() {
@@ -34,7 +31,7 @@ public final class MapPreviewRenderer {
     //?}
         float scale = size / (float) MAP_SIZE;
 
-        //? if >=1.21.9 {
+        //? if >=1.21.6 {
         Minecraft.getInstance().getMapRenderer().extractRenderState(mapId, data, preview.state);
 
         Matrix3x2fStack pose = graphics.pose();
@@ -47,16 +44,39 @@ public final class MapPreviewRenderer {
         graphics.submitMapRenderState(preview.state);
         //?}
         pose.popMatrix();
-        //?} else {
+        //?} elif >=1.21.2 {
+        /*Minecraft.getInstance().getMapRenderer().extractRenderState(mapId, data, preview.state);
+
+        PoseStack pose = graphics.pose();
+        pose.pushPose();
+        pose.translate(x, y, 0.0F);
+        pose.scale(scale, scale, 1.0F);
+        graphics.drawSpecial(buffers -> Minecraft.getInstance().getMapRenderer()
+            .render(preview.state, pose, buffers, false, LightTexture.FULL_BRIGHT));
+        pose.popPose();
+        *///?} else {
         /*PoseStack pose = graphics.pose();
         pose.pushPose();
         pose.translate(x, y, 0.0F);
         pose.scale(scale, scale, 1.0F);
 
         MultiBufferSource.BufferSource buffers = graphics.bufferSource();
-        Minecraft.getInstance().gameRenderer.getMapRenderer().render(pose, buffers, mapId, data, false, LightTexture.FULL_BRIGHT);
+        Minecraft.getInstance().gameRenderer.getMapRenderer().render(pose, buffers, legacyId(mapId), data, false, LightTexture.FULL_BRIGHT);
         buffers.endBatch();
         pose.popPose();
         *///?}
     }
+
+    //? if <1.21.2 {
+    /*
+    //? if >=1.20.5 {
+    public static MapId legacyId(MapId mapId) {
+        return mapId;
+    }
+    //?} else {
+    /^public static int legacyId(MapId mapId) {
+        return mapId.id();
+    }
+    ^///?}
+    *///?}
 }

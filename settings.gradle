@@ -16,10 +16,9 @@ plugins {
     id 'dev.kikugie.stonecutter' version '0.9.7'
 }
 
-// One source tree, one jar per game version. Switch the active version with
-// ./gradlew "Set active project to 1.21.1", or build them all with chiseledBuild.
+// one jar per game version; build all of them with chiseledBuild
 stonecutter.create(rootProject) { builder ->
-    builder.versions("1.21.1", "1.21.11", "26.1.2", "26.2")
+    builder.versions("1.20.1", "1.20.4", "1.20.6", "1.21.1", "1.21.3", "1.21.4", "1.21.5", "1.21.8", "1.21.11", "26.1.2", "26.2", "26.3")
     builder.vcsVersion.set("1.21.11")
     builder.centralScript.set("build.gradle")
     builder.kotlinController.set(false)

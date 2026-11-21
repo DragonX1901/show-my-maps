@@ -18,10 +18,6 @@ import org.dx.show_my_maps.client.ServerSupport;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 import org.jetbrains.annotations.Nullable;
 
-/**
- * Draws the map picture below the normal tooltip lines. Falls back to a text
- * line when the client has never received data for this map id.
- */
 public class MapPreviewTooltip implements ClientTooltipComponent {
     private static final Component NO_DATA = Component.translatable("tooltip.show_my_maps.no_data")
         .withStyle(ChatFormatting.DARK_GRAY);
@@ -40,7 +36,7 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
         return mapData() == null ? font.width(noData()) : size();
     }
 
-    //? if >=1.21.9 {
+    //? if >=1.21.2 {
     @Override
     public int getHeight(Font font) {
         return mapData() == null ? font.lineHeight : size();
@@ -57,7 +53,7 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
     public void extractImage(Font font, int x, int y, int width, int height, GuiGraphicsExtractor graphics) {
         draw(font, x, y, graphics);
     }
-    *///?} elif >=1.21.9 {
+    *///?} elif >=1.21.2 {
     @Override
     public void renderImage(Font font, int x, int y, int width, int height, GuiGraphics graphics) {
         draw(font, x, y, graphics);
@@ -94,10 +90,8 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
             return;
         }
 
-        //? if <1.21.9 {
-        /*// The map goes through a buffer source that is flushed here and now, while
-        // the tooltip background is drawn later and higher up. Without lifting the
-        // picture above it, the tooltip comes out an empty box.
+        //? if <1.21.6 {
+        /*// the buffer flushes now but the tooltip background draws later and higher; lift the map above it
         graphics.pose().pushPose();
         graphics.pose().translate(0.0F, 0.0F, 500.0F);
         MapPreviewRenderer.draw(graphics, this.preview, this.mapId, data, x, y, size());
@@ -108,7 +102,7 @@ public class MapPreviewTooltip implements ClientTooltipComponent {
     }
     //?}
 
-    /** On a server without the mod the reason is worth naming: it will never arrive. */
+    // on a server without a server half the map will never arrive, so say that
     private static Component noData() {
         return ServerSupport.serverHasMod() ? NO_DATA : NO_DATA_PLAIN_SERVER;
     }

@@ -1,6 +1,6 @@
 package org.dx.show_my_maps.mixin.client;
 
-//? if >=1.21.9 {
+//? if >=1.21.5 {
 import java.util.function.Consumer;
 import net.minecraft.core.component.DataComponentGetter;
 import net.minecraft.world.item.component.ItemContainerContents;
@@ -8,6 +8,9 @@ import net.minecraft.world.item.component.ItemContainerContents;
 /*import java.util.List;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.ShulkerBoxBlock;
+*///?}
+//? if <1.20.5 {
+/*import net.minecraft.world.level.BlockGetter;
 *///?}
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
@@ -18,11 +21,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/**
- * The grid already says what is in the box, so drop vanilla's list of names. Before
- * 1.21.9 those lines came from the block rather than the container component.
- */
-//? if >=1.21.9 {
+/** The grid replaces vanilla's list of item names. */
+//? if >=1.21.5 {
 @Mixin(ItemContainerContents.class)
 public class ContainerTooltipLinesMixin {
     @Inject(method = "addToTooltip", at = @At("HEAD"), cancellable = true)
@@ -36,7 +36,11 @@ public class ContainerTooltipLinesMixin {
 /*@Mixin(ShulkerBoxBlock.class)
 public class ContainerTooltipLinesMixin {
     @Inject(method = "appendHoverText", at = @At("HEAD"), cancellable = true)
+    //? if >=1.20.5 {
     private void show_my_maps$dropTextLines(ItemStack stack, Item.TooltipContext context, List<Component> lines, TooltipFlag flag, CallbackInfo ci) {
+    //?} else {
+    /^private void show_my_maps$dropTextLines(ItemStack stack, BlockGetter level, List<Component> lines, TooltipFlag flag, CallbackInfo ci) {
+    ^///?}
         if (ModCompat.drawContainerTooltip()) {
             ci.cancel();
         }

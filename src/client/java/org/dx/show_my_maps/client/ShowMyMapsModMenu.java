@@ -4,10 +4,7 @@ import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
 import org.dx.show_my_maps.client.gui.ShowMyMapsConfigScreen;
 
-/**
- * Fabric only loads this entrypoint when Mod Menu is present, so the class never
- * touches the game without it.
- */
+/** Only loaded when Mod Menu is installed. */
 public class ShowMyMapsModMenu implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {

@@ -29,10 +29,6 @@ import org.dx.show_my_maps.client.ShowMyMapsConfig;
 import org.dx.show_my_maps.client.tooltip.ContainerPreviewTooltip;
 import org.dx.show_my_maps.client.tooltip.ContainerPreviewTooltipData;
 
-/**
- * Covers the two places a map is neither held nor in a plain slot: lying on the
- * ground, and packed inside a shulker box.
- */
 public class DropAndShulkerTest implements FabricClientGameTest {
     private static final int BOX_SLOT = 9;
 
@@ -82,7 +78,6 @@ public class DropAndShulkerTest implements FabricClientGameTest {
                 throw new AssertionError("map inside the shulker box was never painted");
             });
 
-            // Now that the mod's own painting is proven, swap in art worth screenshotting.
             singleplayer.getServer().runOnServer(server -> {
                 ServerLevel level = server.getPlayerList().getPlayers().get(0).level();
 
@@ -91,7 +86,6 @@ public class DropAndShulkerTest implements FabricClientGameTest {
             });
             context.waitTicks(40);
 
-            // Aim at whatever position the dropped map actually settled in.
             context.runOnClient(minecraft -> {
                 minecraft.setScreen(null);
 
@@ -126,7 +120,6 @@ public class DropAndShulkerTest implements FabricClientGameTest {
                 Optional<TooltipComponent> image = box.getTooltipImage();
 
                 if (ModCompat.SHULKER_BOX_TOOLTIP) {
-                    // Shulker Box Tooltip owns the preview; this mod must not add a second one.
                     if (image.isPresent() && image.get() instanceof ContainerPreviewTooltipData) {
                         throw new AssertionError("drew a container grid on top of Shulker Box Tooltip");
                     }
@@ -166,7 +159,6 @@ public class DropAndShulkerTest implements FabricClientGameTest {
             System.out.println("SHOW_MY_MAPS_SCREENSHOT shulker=" + boxShot);
 
             if (ModCompat.SHULKER_BOX_TOOLTIP) {
-                // Its preview opens on shift, and the map inside should show as art.
                 context.getInput().holdShift();
                 context.waitTicks(10);
                 Path expanded = context.takeScreenshot("shulker_tooltip_expanded");

@@ -14,10 +14,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.MapItem;
 import org.dx.show_my_maps.client.ShowMyMapsConfig;
 
-/**
- * Renders a painted map at full size in the tooltip and screenshots it. The right
- * half of the project logo comes from that shot.
- */
+/** Screenshot of a painted map at full tooltip size; the right half of the logo. */
 public class LogoShotTest implements FabricClientGameTest {
     private static final int MAP_SLOT = 9;
 

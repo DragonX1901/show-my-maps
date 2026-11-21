@@ -24,10 +24,6 @@ import org.dx.show_my_maps.client.gui.ShowMyMapsConfigScreen;
 import org.dx.show_my_maps.client.tooltip.MapPreviewTooltip;
 import org.dx.show_my_maps.client.tooltip.MapPreviewTooltipData;
 
-/**
- * Puts a filled map in an inventory slot the player is not holding, then checks
- * that the slot icon and the hover tooltip both draw it.
- */
 public class MapPreviewClientTest implements FabricClientGameTest {
     private static final int MAP_SLOT = 9;
 
@@ -43,15 +39,12 @@ public class MapPreviewClientTest implements FabricClientGameTest {
                 ServerPlayer player = server.getPlayerList().getPlayers().get(0);
                 ServerLevel level = player.level();
                 BlockPos pos = player.blockPosition();
-                // A brand new map, blank and never held. The mod has to paint it.
                 ItemStack map = MapItem.create(level, pos.getX(), pos.getZ(), (byte) 0, true, false);
                 player.getInventory().setItem(MAP_SLOT, map);
             });
 
             context.waitTicks(200);
 
-            // Terrain painting is what the first assertion checks; the art is only so the
-            // screenshots show something worth looking at.
             singleplayer.getServer().runOnServer(server -> {
                 ServerPlayer player = server.getPlayerList().getPlayers().get(0);
                 ItemStack map = player.getInventory().getItem(MAP_SLOT);
@@ -106,7 +99,6 @@ public class MapPreviewClientTest implements FabricClientGameTest {
 
             });
 
-            // Icon mode: art in the slot with the mouse nowhere near it.
             context.runOnClient(minecraft -> {
                 ShowMyMapsConfig.get().slotPreview = true;
                 minecraft.setScreen(new InventoryScreen(minecraft.player));
@@ -146,10 +138,7 @@ public class MapPreviewClientTest implements FabricClientGameTest {
         }
     }
 
-    /**
-     * Second half: a map the player has never carried, sitting in a chest. A vanilla
-     * server sends nothing for it.
-     */
+    // a map never carried, in a chest: vanilla sends nothing for it
     private void checkChestMap(ClientGameTestContext context, TestSingleplayerContext singleplayer) {
         context.runOnClient(minecraft -> minecraft.setScreen(null));
         context.waitTicks(5);
